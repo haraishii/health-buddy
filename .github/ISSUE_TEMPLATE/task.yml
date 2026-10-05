@@ -1,0 +1,35 @@
+name: Task
+description: Work from the timeline (screen, component, setup)
+labels: ["task"]
+body:
+  - type: dropdown
+    id: owner
+    attributes:
+      label: Owner
+      options:
+        - Erwin (lead & foundation)
+        - Teresa (data & charts)
+        - Fadhil (interaction & animation)
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What to build
+      placeholder: Home screen with greeting, Health Score card, daily goals, quick log and AI Coach tip.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      placeholder: |
+        - Matches the mockup
+        - The +250 ml button increases the water value
+    validations:
+      required: true
+  - type: input
+    id: estimate
+    attributes:
+      label: Estimate (working days)
+      placeholder: "3"

@@ -1,0 +1,23 @@
+# Replace @erwin, @teresa and @fadhil with their real GitHub usernames.
+# The owner of a file is automatically requested to review PRs that change it.
+
+*                                     @erwin
+
+/lib/theme.dart                       @erwin
+/lib/main.dart                        @erwin
+/lib/widgets/common.dart              @erwin
+/lib/screens/home_screen.dart         @erwin
+/lib/screens/profile_screen.dart      @erwin
+
+/lib/data/                            @teresa
+/lib/widgets/charts.dart              @teresa
+/lib/screens/analytics_screen.dart    @teresa
+/lib/screens/food_screen.dart         @teresa
+/lib/screens/scan_meal_screen.dart    @teresa
+
+/lib/widgets/animated.dart            @fadhil
+/lib/screens/ai_coach_screen.dart     @fadhil
+/lib/screens/stress_check_screen.dart @fadhil
+/lib/screens/log_exercise_screen.dart @fadhil
+
+/.github/                             @erwin

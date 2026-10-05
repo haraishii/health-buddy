@@ -1,0 +1,4 @@
+{
+  "recommendations": ["Dart-Code.flutter", "Dart-Code.dart-code"],
+  "unwantedRecommendations": ["redhat.java", "vscjava.vscode-java-pack"]
+}

@@ -1,0 +1,35 @@
+name: Bug
+description: Something is broken or doesn't match the design
+labels: ["bug"]
+body:
+  - type: input
+    id: screen
+    attributes:
+      label: Screen
+      placeholder: Analytics
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the Analytics tab
+        2. Scroll to the Stress Level card
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Phone & OS version
+      placeholder: Redmi Note 12, Android 14
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot

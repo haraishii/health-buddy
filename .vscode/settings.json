@@ -1,0 +1,23 @@
+{
+  "dart.lineLength": 120,
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "Dart-Code.dart-code",
+    "editor.rulers": [120],
+    "editor.tabSize": 2,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll": "explicit"
+    }
+  },
+  "files.exclude": {
+    "**/.dart_tool": true,
+    "**/build": true,
+    "**/*.iml": true
+  },
+  "search.exclude": {
+    "**/android/**": true,
+    "**/ios/**": true,
+    "**/web/**": true
+  }
+}
