@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
-import '../widgets/charts.dart';
-import '../widgets/common.dart';
+import '../../../../app/navigation/app_tab_controller.dart';
+import '../../../../theme.dart';
+import '../../../../widgets/charts.dart';
+import '../../../../widgets/common.dart';
 
 const _days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const _dayLetters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -27,16 +28,8 @@ class AnalyticsScreen extends StatelessWidget {
               for (final w in ['May 12 – 18', 'May 5 – 11', 'Apr 28 – May 4'])
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    w,
-                    style: ts(
-                      15,
-                      w == 'May 12 – 18' ? FontWeight.w700 : FontWeight.w400,
-                    ),
-                  ),
-                  trailing: w == 'May 12 – 18'
-                      ? const Icon(Icons.check_rounded, color: AppColors.green)
-                      : null,
+                  title: Text(w, style: ts(15, w == 'May 12 – 18' ? FontWeight.w700 : FontWeight.w400)),
+                  trailing: w == 'May 12 – 18' ? const Icon(Icons.check_rounded, color: AppColors.green) : null,
                   onTap: () => Navigator.of(sheetContext).pop(),
                 ),
             ],
@@ -64,17 +57,8 @@ class AnalyticsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     spacing: 2,
                     children: [
-                      Text(
-                        'Analytics',
-                        style: ts(
-                          28,
-                          FontWeight.w800,
-                        ).copyWith(letterSpacing: -0.5, height: 1.15),
-                      ),
-                      Text(
-                        'Track your progress and stay healthier.',
-                        style: ts(14, FontWeight.w400, AppColors.muted),
-                      ),
+                      Text('Analytics', style: ts(28, FontWeight.w800).copyWith(letterSpacing: -0.5, height: 1.15)),
+                      Text('Track your progress and stay healthier.', style: ts(14, FontWeight.w400, AppColors.muted)),
                     ],
                   ),
                 ),
@@ -123,51 +107,24 @@ class AnalyticsScreen extends StatelessWidget {
                                   children: [
                                     TextSpan(
                                       text: '${(85 * t).round()}',
-                                      style: ts(
-                                        36,
-                                        FontWeight.w800,
-                                        AppColors.greenDark,
-                                      ).copyWith(height: 1),
+                                      style: ts(36, FontWeight.w800, AppColors.greenDark).copyWith(height: 1),
                                     ),
-                                    TextSpan(
-                                      text: ' /100',
-                                      style: ts(
-                                        13,
-                                        FontWeight.w400,
-                                        AppColors.muted,
-                                      ),
-                                    ),
+                                    TextSpan(text: ' /100', style: ts(13, FontWeight.w400, AppColors.muted)),
                                   ],
                                 ),
                               ),
                             ),
-                            Text(
-                              'Latest score',
-                              style: ts(12, FontWeight.w400, AppColors.muted),
-                            ),
+                            Text('Latest score', style: ts(12, FontWeight.w400, AppColors.muted)),
                             const SizedBox(height: 4),
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 color: AppColors.greenSoft,
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Text(
-                                '↑ 12%',
-                                style: ts(
-                                  15,
-                                  FontWeight.w800,
-                                  AppColors.greenDark,
-                                ),
-                              ),
+                              child: Text('↑ 12%', style: ts(15, FontWeight.w800, AppColors.greenDark)),
                             ),
-                            Text(
-                              'vs last week',
-                              style: ts(12, FontWeight.w400, AppColors.muted),
-                            ),
+                            Text('vs last week', style: ts(12, FontWeight.w400, AppColors.muted)),
                           ],
                         ),
                       ),
@@ -193,10 +150,7 @@ class AnalyticsScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         spacing: 4,
                         children: [
-                          Text(
-                            'Balance Overview',
-                            style: ts(15, FontWeight.w700),
-                          ),
+                          Text('Balance Overview', style: ts(15, FontWeight.w700)),
                           const RadarChart(
                             names: ['Nutrition', 'Stress', 'Sleep', 'Exercise'],
                             values: [90, 85, 80, 70],
@@ -216,12 +170,7 @@ class AnalyticsScreen extends StatelessWidget {
                         spacing: 14,
                         children: [
                           Text('Nutrition', style: ts(15, FontWeight.w700)),
-                          const _NutriRow(
-                            'Protein',
-                            0.85,
-                            AppColors.green,
-                            300,
-                          ),
+                          const _NutriRow('Protein', 0.85, AppColors.green, 300),
                           const _NutriRow('Carbs', 0.60, AppColors.blue, 380),
                           const _NutriRow('Fat', 0.80, AppColors.orange, 460),
                           const _NutriRow('Fiber', 0.40, AppColors.purple, 540),
@@ -250,10 +199,7 @@ class AnalyticsScreen extends StatelessWidget {
                         spacing: 6,
                         children: [
                           Text('Stress Level', style: ts(15, FontWeight.w700)),
-                          Text(
-                            '1 = low, 10 = high',
-                            style: ts(11, FontWeight.w400, AppColors.muted),
-                          ),
+                          Text('1 = low, 10 = high', style: ts(11, FontWeight.w400, AppColors.muted)),
                           const LineChart(
                             values: [7, 6, 8, 5, 4, 3, 4],
                             labels: _dayLetters,
@@ -276,45 +222,23 @@ class AnalyticsScreen extends StatelessWidget {
                               children: [
                                 Flexible(
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Weekly avg',
-                                        style: ts(
-                                          11,
-                                          FontWeight.w400,
-                                          AppColors.muted,
-                                        ),
+                                        style: ts(11, FontWeight.w400, AppColors.muted),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      Text(
-                                        '5.3',
-                                        style: ts(20, FontWeight.w800),
-                                      ),
+                                      Text('5.3', style: ts(20, FontWeight.w800)),
                                     ],
                                   ),
                                 ),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    Text(
-                                      'vs last wk',
-                                      style: ts(
-                                        11,
-                                        FontWeight.w400,
-                                        AppColors.muted,
-                                      ),
-                                    ),
-                                    Text(
-                                      '↓ 15%',
-                                      style: ts(
-                                        16,
-                                        FontWeight.w800,
-                                        AppColors.greenDark,
-                                      ),
-                                    ),
+                                    Text('vs last wk', style: ts(11, FontWeight.w400, AppColors.muted)),
+                                    Text('↓ 15%', style: ts(16, FontWeight.w800, AppColors.greenDark)),
                                   ],
                                 ),
                               ],
@@ -338,13 +262,7 @@ class AnalyticsScreen extends StatelessWidget {
                           Text.rich(
                             TextSpan(
                               children: [
-                                TextSpan(
-                                  text: '4.2',
-                                  style: ts(
-                                    24,
-                                    FontWeight.w800,
-                                  ).copyWith(height: 1.1),
-                                ),
+                                TextSpan(text: '4.2', style: ts(24, FontWeight.w800).copyWith(height: 1.1)),
                                 const TextSpan(text: ' days/week'),
                               ],
                             ),
@@ -364,18 +282,8 @@ class AnalyticsScreen extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Steps (avg)',
-                                      style: ts(
-                                        11,
-                                        FontWeight.w400,
-                                        AppColors.muted,
-                                      ),
-                                    ),
-                                    Text(
-                                      '7,842',
-                                      style: ts(16, FontWeight.w800),
-                                    ),
+                                    Text('Steps (avg)', style: ts(11, FontWeight.w400, AppColors.muted)),
+                                    Text('7,842', style: ts(16, FontWeight.w800)),
                                   ],
                                 ),
                               ),
@@ -383,18 +291,8 @@ class AnalyticsScreen extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Burned (avg)',
-                                      style: ts(
-                                        11,
-                                        FontWeight.w400,
-                                        AppColors.muted,
-                                      ),
-                                    ),
-                                    Text(
-                                      '320 kcal',
-                                      style: ts(16, FontWeight.w800),
-                                    ),
+                                    Text('Burned (avg)', style: ts(11, FontWeight.w400, AppColors.muted)),
+                                    Text('320 kcal', style: ts(16, FontWeight.w800)),
                                   ],
                                 ),
                               ),
@@ -435,24 +333,14 @@ class AnalyticsScreen extends StatelessWidget {
                               size: 32,
                               iconSize: 18,
                             ),
-                            Text(
-                              'AI Insights',
-                              style: ts(
-                                16,
-                                FontWeight.w700,
-                                AppColors.purpleDeep,
-                              ),
-                            ),
+                            Text('AI Insights', style: ts(16, FontWeight.w700, AppColors.purpleDeep)),
                           ],
                         ),
                         Text.rich(
                           TextSpan(
                             children: [
                               const TextSpan(text: 'Your stress drops '),
-                              TextSpan(
-                                text: '20%',
-                                style: ts(14, FontWeight.w700),
-                              ),
+                              TextSpan(text: '20%', style: ts(14, FontWeight.w700)),
                               const TextSpan(text: ' on days you exercise.'),
                             ],
                           ),
@@ -461,13 +349,8 @@ class AnalyticsScreen extends StatelessWidget {
                         Text.rich(
                           TextSpan(
                             children: [
-                              TextSpan(
-                                text: 'Recommendation: ',
-                                style: ts(14, FontWeight.w700),
-                              ),
-                              const TextSpan(
-                                text: 'walk 20 minutes after class to keep your progress going.',
-                              ),
+                              TextSpan(text: 'Recommendation: ', style: ts(14, FontWeight.w700)),
+                              const TextSpan(text: 'walk 20 minutes after class to keep your progress going.'),
                             ],
                           ),
                           style: ts(14).copyWith(height: 1.45),
@@ -521,11 +404,7 @@ class AnalyticsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Text(
-                    'vs last week',
-                    textAlign: TextAlign.center,
-                    style: ts(12, FontWeight.w400, AppColors.muted),
-                  ),
+                  Text('vs last week', textAlign: TextAlign.center, style: ts(12, FontWeight.w400, AppColors.muted)),
                 ],
               ),
             ),

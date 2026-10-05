@@ -2,12 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
-import '../widgets/animated.dart';
-import '../widgets/common.dart';
-import 'log_exercise_screen.dart';
-import 'scan_meal_screen.dart';
-import 'stress_check_screen.dart';
+import '../../../../app/navigation/app_tab_controller.dart';
+import '../../../../theme.dart';
+import '../../../../widgets/animated.dart';
+import '../../../../widgets/common.dart';
+import '../../../exercise/presentation/pages/log_exercise_screen.dart';
+import '../../../food/presentation/pages/scan_meal_screen.dart';
+import '../../../stress/presentation/pages/stress_check_screen.dart';
 
 class _ChatMsg {
   const _ChatMsg(this.text, this.fromUser);
@@ -50,12 +51,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = _endKey.currentContext;
       if (ctx != null && mounted) {
-        Scrollable.ensureVisible(
-          ctx,
-          duration: Motion.push,
-          curve: Motion.standard,
-          alignment: 1,
-        );
+        Scrollable.ensureVisible(ctx, duration: Motion.push, curve: Motion.standard, alignment: 1);
       }
     });
   }
@@ -101,15 +97,9 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
               ])
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(
-                    Icons.chat_bubble_outline_rounded,
-                    color: AppColors.muted,
-                  ),
+                  leading: const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.muted),
                   title: Text(h.$1, style: ts(15)),
-                  trailing: Text(
-                    h.$2,
-                    style: ts(13, FontWeight.w400, AppColors.muted),
-                  ),
+                  trailing: Text(h.$2, style: ts(13, FontWeight.w400, AppColors.muted)),
                   onTap: () => Navigator.of(sheetContext).pop(),
                 ),
             ],
@@ -122,30 +112,10 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
   @override
   Widget build(BuildContext context) {
     const chips = [
-      (
-        'Why am I feeling tired?',
-        'tired',
-        Icons.bedtime_outlined,
-        AppColors.purple,
-      ),
-      (
-        'What should I eat today?',
-        'eat',
-        Icons.lunch_dining_outlined,
-        AppColors.green,
-      ),
-      (
-        'How can I reduce my stress?',
-        'stress',
-        Icons.spa_outlined,
-        AppColors.blue,
-      ),
-      (
-        'Analyze my weekly progress',
-        'week',
-        Icons.bar_chart_rounded,
-        AppColors.orangeDark,
-      ),
+      ('Why am I feeling tired?', 'tired', Icons.bedtime_outlined, AppColors.purple),
+      ('What should I eat today?', 'eat', Icons.lunch_dining_outlined, AppColors.green),
+      ('How can I reduce my stress?', 'stress', Icons.spa_outlined, AppColors.blue),
+      ('Analyze my weekly progress', 'week', Icons.bar_chart_rounded, AppColors.orangeDark),
     ];
 
     return Column(
@@ -168,10 +138,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
                           children: [
                             Text(
                               'AI Coach',
-                              style: ts(
-                                28,
-                                FontWeight.w800,
-                              ).copyWith(letterSpacing: -0.5, height: 1.15),
+                              style: ts(28, FontWeight.w800).copyWith(letterSpacing: -0.5, height: 1.15),
                             ),
                             Text(
                               'Your personal AI wellness assistant',
@@ -180,11 +147,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
                           ],
                         ),
                       ),
-                      OutlineChipButton(
-                        label: 'History',
-                        icon: Icons.history_rounded,
-                        onTap: _showHistory,
-                      ),
+                      OutlineChipButton(label: 'History', icon: Icons.history_rounded, onTap: _showHistory),
                     ],
                   ),
                 ),
@@ -208,34 +171,17 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
                             Expanded(
                               child: Container(
                                 padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
+                                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   spacing: 2,
                                   children: [
-                                    Text(
-                                      'Hi Annida!',
-                                      style: ts(15, FontWeight.w700),
-                                    ),
-                                    Text(
-                                      "I'm Health Buddy AI.",
-                                      style: ts(
-                                        15,
-                                        FontWeight.w700,
-                                        AppColors.greenDark,
-                                      ),
-                                    ),
+                                    Text('Hi Annida!', style: ts(15, FontWeight.w700)),
+                                    Text("I'm Health Buddy AI.", style: ts(15, FontWeight.w700, AppColors.greenDark)),
                                     const SizedBox(height: 2),
                                     Text(
                                       'I look at your health data and give personal tips.',
-                                      style: ts(
-                                        13,
-                                        FontWeight.w400,
-                                        AppColors.muted,
-                                      ),
+                                      style: ts(13, FontWeight.w400, AppColors.muted),
                                     ),
                                   ],
                                 ),
@@ -245,18 +191,12 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
                         ),
                         Container(
                           padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             spacing: 8,
                             children: [
-                              Text(
-                                'Today at a glance',
-                                style: ts(14, FontWeight.w700),
-                              ),
+                              Text('Today at a glance', style: ts(14, FontWeight.w700)),
                               _GlanceRow(
                                 Icons.eco_rounded,
                                 AppColors.green,
@@ -293,17 +233,11 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     spacing: 10,
                     children: [
-                      Text(
-                        'Ask me anything about your health',
-                        style: ts(16, FontWeight.w700),
-                      ),
+                      Text('Ask me anything about your health', style: ts(16, FontWeight.w700)),
                       twoColumns(gap: 8, [
                         for (final c in chips)
                           AppCard(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 10,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                             radius: 14,
                             borderColor: AppColors.borderStrong,
                             onTap: () => _send(c.$1, c.$2),
@@ -312,13 +246,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
                               spacing: 8,
                               children: [
                                 Icon(c.$3, color: c.$4, size: 22),
-                                Expanded(
-                                  child: Text(
-                                    c.$1,
-                                    style: ts(13, FontWeight.w600),
-                                    maxLines: 2,
-                                  ),
-                                ),
+                                Expanded(child: Text(c.$1, style: ts(13, FontWeight.w600), maxLines: 2)),
                               ],
                             ),
                           ),
@@ -336,35 +264,21 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
                   delayMs: 250,
                   offset: const Offset(24, 0),
                   duration: const Duration(milliseconds: 200),
-                  child: const _Bubble.user(
-                    'Why am I feeling tired lately?',
-                    time: '9:40',
-                  ),
+                  child: const _Bubble.user('Why am I feeling tired lately?', time: '9:40'),
                 ),
-                const FadeUp(
-                  delayMs: 450,
-                  duration: Duration(milliseconds: 260),
-                  child: _FirstReply(),
-                ),
+                const FadeUp(delayMs: 450, duration: Duration(milliseconds: 260), child: _FirstReply()),
                 for (final m in _messages)
                   FadeUp(
                     key: ObjectKey(m),
-                    offset: m.fromUser
-                        ? const Offset(24, 0)
-                        : const Offset(0, 12),
+                    offset: m.fromUser ? const Offset(24, 0) : const Offset(0, 12),
                     duration: Duration(milliseconds: m.fromUser ? 200 : 260),
-                    child: m.fromUser
-                        ? _Bubble.user(m.text)
-                        : _Bubble.bot(m.text),
+                    child: m.fromUser ? _Bubble.user(m.text) : _Bubble.bot(m.text),
                   ),
                 if (_typing)
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
@@ -382,25 +296,19 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
                     Icons.directions_run_rounded,
                     AppColors.blue,
                     'Log Exercise',
-                    () =>
-                        Navigator.of(context)
-                            .push(slideRoute(const LogExerciseScreen())),
+                    () => Navigator.of(context).push(slideRoute(const LogExerciseScreen())),
                   ),
                   _CoachAction(
                     Icons.photo_camera_outlined,
                     AppColors.green,
                     'Scan Meal',
-                    () =>
-                        Navigator.of(context)
-                            .push(slideRoute(const ScanMealScreen())),
+                    () => Navigator.of(context).push(slideRoute(const ScanMealScreen())),
                   ),
                   _CoachAction(
                     Icons.sentiment_satisfied_alt_rounded,
                     AppColors.purple,
                     'Stress Check',
-                    () =>
-                        Navigator.of(context)
-                            .push(slideRoute(const StressCheckScreen())),
+                    () => Navigator.of(context).push(slideRoute(const StressCheckScreen())),
                   ),
                   _CoachAction(
                     Icons.bar_chart_rounded,
@@ -445,15 +353,8 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
                   child: Container(
                     width: 46,
                     height: 46,
-                    decoration: const BoxDecoration(
-                      color: AppColors.green,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.arrow_upward_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
+                    decoration: const BoxDecoration(color: AppColors.green, shape: BoxShape.circle),
+                    child: const Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 24),
                   ),
                 ),
               ],
@@ -466,13 +367,7 @@ class _AiCoachScreenState extends State<AiCoachScreen> {
 }
 
 class _GlanceRow extends StatelessWidget {
-  const _GlanceRow(
-    this.icon,
-    this.iconColor,
-    this.label,
-    this.value,
-    this.valueColor,
-  );
+  const _GlanceRow(this.icon, this.iconColor, this.label, this.value, this.valueColor);
 
   final IconData icon;
   final Color iconColor;
@@ -504,15 +399,11 @@ class _Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bubble = Container(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.sizeOf(context).width * (fromUser ? 0.78 : 0.85),
-      ),
+      constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * (fromUser ? 0.78 : 0.85)),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: fromUser ? AppColors.greenBubble : Colors.white,
-        border: Border.all(
-          color: fromUser ? AppColors.greenBubbleBorder : AppColors.border,
-        ),
+        border: Border.all(color: fromUser ? AppColors.greenBubbleBorder : AppColors.border),
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(16),
           topRight: const Radius.circular(16),
@@ -524,20 +415,13 @@ class _Bubble extends StatelessWidget {
         TextSpan(
           children: [
             TextSpan(text: text),
-            if (time != null)
-              TextSpan(
-                text: '   $time',
-                style: ts(11, FontWeight.w400, AppColors.muted),
-              ),
+            if (time != null) TextSpan(text: '   $time', style: ts(11, FontWeight.w400, AppColors.muted)),
           ],
         ),
         style: ts(14).copyWith(height: 1.45),
       ),
     );
-    return Align(
-      alignment: fromUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: bubble,
-    );
+    return Align(alignment: fromUser ? Alignment.centerRight : Alignment.centerLeft, child: bubble);
   }
 }
 
@@ -552,11 +436,7 @@ class _FirstReply extends StatelessWidget {
       children: [
         const Padding(
           padding: EdgeInsets.only(top: 1),
-          child: Icon(
-            Icons.check_circle_rounded,
-            color: AppColors.green,
-            size: 19,
-          ),
+          child: Icon(Icons.check_circle_rounded, color: AppColors.green, size: 19),
         ),
         Expanded(child: Text(text, style: ts(14).copyWith(height: 1.4))),
       ],
@@ -573,9 +453,7 @@ class _FirstReply extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * 0.88,
-        ),
+        constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.88),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -591,40 +469,19 @@ class _FirstReply extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 8,
           children: [
-            Text(
-              'From your last 7 days, these might be why you feel tired:',
-              style: ts(14).copyWith(height: 1.45),
-            ),
-            reason(
-              Icons.bedtime_outlined,
-              AppColors.purple,
-              'Your average sleep dropped by 1.5 hours.',
-            ),
-            reason(
-              Icons.restaurant_outlined,
-              AppColors.orangeDark,
-              'Your protein intake is below your daily target.',
-            ),
-            reason(
-              Icons.psychology_outlined,
-              AppColors.blue,
-              'Your stress was high on 3 days.',
-            ),
+            Text('From your last 7 days, these might be why you feel tired:', style: ts(14).copyWith(height: 1.45)),
+            reason(Icons.bedtime_outlined, AppColors.purple, 'Your average sleep dropped by 1.5 hours.'),
+            reason(Icons.restaurant_outlined, AppColors.orangeDark, 'Your protein intake is below your daily target.'),
+            reason(Icons.psychology_outlined, AppColors.blue, 'Your stress was high on 3 days.'),
             const Divider(height: 12, color: AppColors.track),
-            Text(
-              'My recommendations:',
-              style: ts(14, FontWeight.w700, AppColors.greenDark),
-            ),
+            Text('My recommendations:', style: ts(14, FontWeight.w700, AppColors.greenDark)),
             check('Sleep before 11:00 PM tonight.'),
             check('Increase protein (target 60 g/day).'),
             check('Take a 20-minute walk after class.'),
             check('Drink 1.8–2 L of water a day.'),
             Align(
               alignment: Alignment.centerRight,
-              child: Text(
-                '9:41',
-                style: ts(11, FontWeight.w400, AppColors.muted),
-              ),
+              child: Text('9:41', style: ts(11, FontWeight.w400, AppColors.muted)),
             ),
           ],
         ),
@@ -654,12 +511,7 @@ class _CoachAction extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 21),
           Expanded(
-            child: Text(
-              label,
-              style: ts(14, FontWeight.w600),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            child: Text(label, style: ts(14, FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
         ],
       ),

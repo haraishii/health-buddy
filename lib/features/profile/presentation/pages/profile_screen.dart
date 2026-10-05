@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
-import '../widgets/common.dart';
+import '../../../../theme.dart';
+import '../../../../widgets/common.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -32,11 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 constraints: const BoxConstraints(minHeight: 52),
                 decoration: BoxDecoration(
-                  border: i == rows.length - 1
-                      ? null
-                      : const Border(
-                          bottom: BorderSide(color: AppColors.divider),
-                        ),
+                  border: i == rows.length - 1 ? null : const Border(bottom: BorderSide(color: AppColors.divider)),
                 ),
                 alignment: Alignment.centerLeft,
                 child: rows[i],
@@ -57,18 +53,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _linkRow(String label, {String? value}) => PressScale(
     label: label,
-    onTap: () => showToast(
-      context,
-      '$label: coming soon',
-      icon: Icons.info_outline_rounded,
-    ),
+    onTap: () => showToast(context, '$label: coming soon', icon: Icons.info_outline_rounded),
     child: SizedBox(
       height: 52,
       child: Row(
         children: [
           Expanded(child: Text(label, style: ts(15))),
-          if (value != null)
-            Text(value, style: ts(14, FontWeight.w400, AppColors.muted)),
+          if (value != null) Text(value, style: ts(14, FontWeight.w400, AppColors.muted)),
           const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
         ],
       ),
@@ -83,15 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 14,
         children: [
-          FadeUp(
-            child: Text(
-              'Profile',
-              style: ts(
-                28,
-                FontWeight.w800,
-              ).copyWith(letterSpacing: -0.5, height: 1.15),
-            ),
-          ),
+          FadeUp(child: Text('Profile', style: ts(28, FontWeight.w800).copyWith(letterSpacing: -0.5, height: 1.15))),
 
           FadeUp(
             delayMs: 60,
@@ -108,63 +91,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         width: 64,
                         height: 64,
                         alignment: Alignment.center,
-                        decoration: const BoxDecoration(
-                          color: AppColors.greenTint,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          'A',
-                          style: ts(26, FontWeight.w800, AppColors.greenDark),
-                        ),
+                        decoration: const BoxDecoration(color: AppColors.greenTint, shape: BoxShape.circle),
+                        child: Text('A', style: ts(26, FontWeight.w800, AppColors.greenDark)),
                       ),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Annida', style: ts(20, FontWeight.w700)),
-                            Text(
-                              'Student · joined May 2026',
-                              style: ts(14, FontWeight.w400, AppColors.muted),
-                            ),
+                            Text('Student · joined May 2026', style: ts(14, FontWeight.w400, AppColors.muted)),
                           ],
                         ),
                       ),
                       OutlineChipButton(
                         label: 'Edit',
-                        onTap: () => showToast(
-                          context,
-                          'Edit profile: coming soon',
-                          icon: Icons.info_outline_rounded,
-                        ),
+                        onTap: () => showToast(context, 'Edit profile: coming soon', icon: Icons.info_outline_rounded),
                       ),
                     ],
                   ),
                   Row(
                     spacing: 8,
                     children: [
-                      for (final s in const [
-                        ('[age]', 'Age'),
-                        ('[cm]', 'Height'),
-                        ('[kg]', 'Weight'),
-                      ])
+                      for (final s in const [('[age]', 'Age'), ('[cm]', 'Height'), ('[kg]', 'Weight')])
                         Expanded(
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 10),
-                            decoration: BoxDecoration(
-                              color: AppColors.bg,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
+                            decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(14)),
                             child: Column(
                               children: [
                                 Text(s.$1, style: ts(17, FontWeight.w700)),
-                                Text(
-                                  s.$2,
-                                  style: ts(
-                                    12,
-                                    FontWeight.w400,
-                                    AppColors.muted,
-                                  ),
-                                ),
+                                Text(s.$2, style: ts(12, FontWeight.w400, AppColors.muted)),
                               ],
                             ),
                           ),
@@ -215,20 +171,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Smartwatch (sleep)', style: ts(15)),
-                        Text(
-                          'Optional, sleep is logged manually now',
-                          style: ts(12, FontWeight.w400, AppColors.muted),
-                        ),
+                        Text('Optional, sleep is logged manually now', style: ts(12, FontWeight.w400, AppColors.muted)),
                       ],
                     ),
                   ),
                   OutlineChipButton(
                     label: 'Connect',
-                    onTap: () => showToast(
-                      context,
-                      'Wearable sync is planned for phase 3',
-                      icon: Icons.watch_outlined,
-                    ),
+                    onTap: () => showToast(context, 'Wearable sync is planned for phase 3', icon: Icons.watch_outlined),
                   ),
                 ],
               ),
@@ -240,11 +189,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Row(
                 children: [
                   Expanded(child: Text(e.key, style: ts(15))),
-                  ToggleSwitch(
-                    label: e.key,
-                    value: e.value,
-                    onChanged: (v) => setState(() => _toggles[e.key] = v),
-                  ),
+                  ToggleSwitch(label: e.key, value: e.value, onChanged: (v) => setState(() => _toggles[e.key] = v)),
                 ],
               ),
             _linkRow('Privacy & data'),
@@ -255,11 +200,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             delayMs: 300,
             child: PressScale(
               label: 'Log out',
-              onTap: () => showToast(
-                context,
-                'Logged out (demo)',
-                icon: Icons.logout_rounded,
-              ),
+              onTap: () => showToast(context, 'Logged out (demo)', icon: Icons.logout_rounded),
               child: Container(
                 height: 52,
                 alignment: Alignment.center,
@@ -268,10 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: const Color(0xFFF3D0D0)),
                 ),
-                child: Text(
-                  'Log out',
-                  style: ts(15, FontWeight.w600, AppColors.red),
-                ),
+                child: Text('Log out', style: ts(15, FontWeight.w600, AppColors.red)),
               ),
             ),
           ),

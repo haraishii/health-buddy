@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
-import '../widgets/charts.dart';
-import '../widgets/common.dart';
+import '../../../../theme.dart';
+import '../../../../widgets/charts.dart';
+import '../../../../widgets/common.dart';
 import 'scan_meal_screen.dart';
 
 class FoodScreen extends StatelessWidget {
   const FoodScreen({super.key});
 
-  void _openScan(BuildContext context) =>
-      Navigator.of(context).push(slideRoute(const ScanMealScreen()));
+  void _openScan(BuildContext context) => Navigator.of(context).push(slideRoute(const ScanMealScreen()));
 
   @override
   Widget build(BuildContext context) {
@@ -28,25 +27,12 @@ class FoodScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     spacing: 2,
                     children: [
-                      Text(
-                        'Food',
-                        style: ts(
-                          28,
-                          FontWeight.w800,
-                        ).copyWith(letterSpacing: -0.5, height: 1.15),
-                      ),
-                      Text(
-                        'Today, Sunday May 18',
-                        style: ts(14, FontWeight.w400, AppColors.muted),
-                      ),
+                      Text('Food', style: ts(28, FontWeight.w800).copyWith(letterSpacing: -0.5, height: 1.15)),
+                      Text('Today, Sunday May 18', style: ts(14, FontWeight.w400, AppColors.muted)),
                     ],
                   ),
                 ),
-                OutlineChipButton(
-                  label: 'Search',
-                  icon: Icons.search_rounded,
-                  onTap: () => _openScan(context),
-                ),
+                OutlineChipButton(label: 'Search', icon: Icons.search_rounded, onTap: () => _openScan(context)),
               ],
             ),
           ),
@@ -67,14 +53,8 @@ class FoodScreen extends StatelessWidget {
                     center: (t) => Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          fmtThousands(1420 * t),
-                          style: ts(24, FontWeight.w800).copyWith(height: 1),
-                        ),
-                        Text(
-                          'of 1,900 kcal',
-                          style: ts(12, FontWeight.w400, AppColors.muted),
-                        ),
+                        Text(fmtThousands(1420 * t), style: ts(24, FontWeight.w800).copyWith(height: 1)),
+                        Text('of 1,900 kcal', style: ts(12, FontWeight.w400, AppColors.muted)),
                       ],
                     ),
                   ),
@@ -101,10 +81,7 @@ class FoodScreen extends StatelessWidget {
               onTap: () => _openScan(context),
               child: Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.green,
-                  borderRadius: BorderRadius.circular(18),
-                ),
+                decoration: BoxDecoration(color: AppColors.green, borderRadius: BorderRadius.circular(18)),
                 child: Row(
                   spacing: 14,
                   children: [
@@ -115,35 +92,21 @@ class FoodScreen extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(
-                        Icons.photo_camera_outlined,
-                        color: Colors.white,
-                        size: 26,
-                      ),
+                      child: const Icon(Icons.photo_camera_outlined, color: Colors.white, size: 26),
                     ),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Scan Meal',
-                            style: ts(16, FontWeight.w700, Colors.white),
-                          ),
+                          Text('Scan Meal', style: ts(16, FontWeight.w700, Colors.white)),
                           Text(
                             'Photo, barcode or search',
-                            style: ts(
-                              13,
-                              FontWeight.w400,
-                              Colors.white.withValues(alpha: 0.92),
-                            ),
+                            style: ts(13, FontWeight.w400, Colors.white.withValues(alpha: 0.92)),
                           ),
                         ],
                       ),
                     ),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      color: Colors.white,
-                    ),
+                    const Icon(Icons.chevron_right_rounded, color: Colors.white),
                   ],
                 ),
               ),
@@ -214,23 +177,14 @@ class FoodScreen extends StatelessWidget {
                     height: 56,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: const Color(0xFFC9CED6),
-                        width: 1.5,
-                      ),
+                      border: Border.all(color: const Color(0xFFC9CED6), width: 1.5),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       spacing: 8,
                       children: [
-                        const Icon(
-                          Icons.add_rounded,
-                          color: AppColors.greenDark,
-                        ),
-                        Text(
-                          'Add dinner',
-                          style: ts(15, FontWeight.w600, AppColors.greenDark),
-                        ),
+                        const Icon(Icons.add_rounded, color: AppColors.greenDark),
+                        Text('Add dinner', style: ts(15, FontWeight.w600, AppColors.greenDark)),
                       ],
                     ),
                   ),
@@ -258,13 +212,8 @@ class FoodScreen extends StatelessWidget {
                     child: Text.rich(
                       TextSpan(
                         children: [
-                          TextSpan(
-                            text: '22% more healthy meals',
-                            style: ts(14, FontWeight.w700),
-                          ),
-                          const TextSpan(
-                            text: ' than last week. Add protein at dinner to hit your goal.',
-                          ),
+                          TextSpan(text: '22% more healthy meals', style: ts(14, FontWeight.w700)),
+                          const TextSpan(text: ' than last week. Add protein at dinner to hit your goal.'),
                         ],
                       ),
                       style: ts(14).copyWith(height: 1.4),
@@ -310,27 +259,14 @@ class _MacroRow extends StatelessWidget {
             ),
           ],
         ),
-        ProgressBar(
-          value: value / goal,
-          color: color,
-          height: 6,
-          delayMs: delayMs,
-        ),
+        ProgressBar(value: value / goal, color: color, height: 6, delayMs: delayMs),
       ],
     );
   }
 }
 
 class _FoodItem {
-  const _FoodItem(
-    this.name,
-    this.macros,
-    this.icon,
-    this.color,
-    this.bg, {
-    this.tag,
-    this.warn = false,
-  });
+  const _FoodItem(this.name, this.macros, this.icon, this.color, this.bg, {this.tag, this.warn = false});
 
   final String name;
   final String macros;
@@ -342,11 +278,7 @@ class _FoodItem {
 }
 
 class _MealCard extends StatelessWidget {
-  const _MealCard({
-    required this.title,
-    required this.kcal,
-    required this.items,
-  });
+  const _MealCard({required this.title, required this.kcal, required this.items});
 
   final String title;
   final int kcal;
@@ -364,33 +296,20 @@ class _MealCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(title, style: ts(15, FontWeight.w700)),
-              Text(
-                '$kcal kcal',
-                style: ts(13, FontWeight.w400, AppColors.muted),
-              ),
+              Text('$kcal kcal', style: ts(13, FontWeight.w400, AppColors.muted)),
             ],
           ),
           for (final f in items)
             Row(
               spacing: 12,
               children: [
-                IconBadge(
-                  f.icon,
-                  color: f.color,
-                  bg: f.bg,
-                  size: 48,
-                  iconSize: 24,
-                  radius: 12,
-                ),
+                IconBadge(f.icon, color: f.color, bg: f.bg, size: 48, iconSize: 24, radius: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(f.name, style: ts(14, FontWeight.w600)),
-                      Text(
-                        f.macros,
-                        style: ts(12, FontWeight.w400, AppColors.muted),
-                      ),
+                      Text(f.macros, style: ts(12, FontWeight.w400, AppColors.muted)),
                     ],
                   ),
                 ),
