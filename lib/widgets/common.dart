@@ -7,7 +7,8 @@ import '../theme.dart';
 /// Active tab in the tab bar (0 Home, 1 Analytics, 2 AI Coach, 3 Food, 4 Profile).
 final ValueNotifier<int> currentTab = ValueNotifier<int>(0);
 
-bool reduceMotion(BuildContext context) => MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+bool reduceMotion(BuildContext context) =>
+    MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
 /// Format 1420 -> "1,420".
 String fmtThousands(num value) {
@@ -40,8 +41,14 @@ class Reveal extends StatefulWidget {
 }
 
 class _RevealState extends State<Reveal> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: widget.duration);
-  late final CurvedAnimation _a = CurvedAnimation(parent: _c, curve: widget.curve);
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: widget.duration,
+  );
+  late final CurvedAnimation _a = CurvedAnimation(
+    parent: _c,
+    curve: widget.curve,
+  );
   Timer? _timer;
   bool _started = false;
 
@@ -106,7 +113,13 @@ class FadeUp extends StatelessWidget {
 
 /// Press effect: scale 0.97 for 100 ms.
 class PressScale extends StatefulWidget {
-  const PressScale({super.key, required this.child, this.onTap, this.label, this.scale = 0.97});
+  const PressScale({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.label,
+    this.scale = 0.97,
+  });
 
   final Widget child;
   final VoidCallback? onTap;
@@ -182,7 +195,15 @@ class AppCard extends StatelessWidget {
 }
 
 class IconBadge extends StatelessWidget {
-  const IconBadge(this.icon, {super.key, required this.color, required this.bg, this.size = 36, this.iconSize = 20, this.radius = 10});
+  const IconBadge(
+    this.icon, {
+    super.key,
+    required this.color,
+    required this.bg,
+    this.size = 36,
+    this.iconSize = 20,
+    this.radius = 10,
+  });
 
   final IconData icon;
   final Color color;
@@ -196,14 +217,23 @@ class IconBadge extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(radius)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(radius),
+      ),
       child: Icon(icon, color: color, size: iconSize),
     );
   }
 }
 
 class Pill extends StatelessWidget {
-  const Pill(this.text, {super.key, this.color = AppColors.greenDark, this.bg = AppColors.greenSoft, this.size = 12});
+  const Pill(
+    this.text, {
+    super.key,
+    this.color = AppColors.greenDark,
+    this.bg = AppColors.greenSoft,
+    this.size = 12,
+  });
 
   final String text;
   final Color color;
@@ -214,7 +244,10 @@ class Pill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(99)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(99),
+      ),
       child: Text(text, style: ts(size, FontWeight.w700, color)),
     );
   }
@@ -222,7 +255,13 @@ class Pill extends StatelessWidget {
 
 /// Progress bar that fills 0 -> value (600 ms) and animates when the value changes.
 class ProgressBar extends StatefulWidget {
-  const ProgressBar({super.key, required this.value, required this.color, this.height = 8, this.delayMs = 300});
+  const ProgressBar({
+    super.key,
+    required this.value,
+    required this.color,
+    this.height = 8,
+    this.delayMs = 300,
+  });
 
   final double value;
   final Color color;
@@ -268,7 +307,9 @@ class _ProgressBarState extends State<ProgressBar> {
     final r = BorderRadius.circular(99);
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: _shown),
-      duration: reduceMotion(context) ? Duration.zero : const Duration(milliseconds: 600),
+      duration: reduceMotion(context)
+          ? Duration.zero
+          : const Duration(milliseconds: 600),
       curve: Motion.standard,
       builder: (context, v, _) => Container(
         height: widget.height,
@@ -276,7 +317,10 @@ class _ProgressBarState extends State<ProgressBar> {
         alignment: Alignment.centerLeft,
         child: FractionallySizedBox(
           widthFactor: v.clamp(0.0, 1.0),
-          child: Container(height: widget.height, decoration: BoxDecoration(color: widget.color, borderRadius: r)),
+          child: Container(
+            height: widget.height,
+            decoration: BoxDecoration(color: widget.color, borderRadius: r),
+          ),
         ),
       ),
     );
@@ -285,7 +329,13 @@ class _ProgressBarState extends State<ProgressBar> {
 
 /// Square 44 x 44 icon button (notifications, back, etc.).
 class SquareIconButton extends StatelessWidget {
-  const SquareIconButton({super.key, required this.icon, required this.label, this.onTap, this.size = 44});
+  const SquareIconButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    this.onTap,
+    this.size = 44,
+  });
 
   final IconData icon;
   final String label;
@@ -313,7 +363,13 @@ class SquareIconButton extends StatelessWidget {
 
 /// Outlined button with icon + label (History, date, Search).
 class OutlineChipButton extends StatelessWidget {
-  const OutlineChipButton({super.key, required this.label, this.icon, this.trailing, this.onTap});
+  const OutlineChipButton({
+    super.key,
+    required this.label,
+    this.icon,
+    this.trailing,
+    this.onTap,
+  });
 
   final String label;
   final IconData? icon;
@@ -338,7 +394,8 @@ class OutlineChipButton extends StatelessWidget {
           children: [
             if (icon != null) Icon(icon, size: 17, color: AppColors.text),
             Text(label, style: ts(13.5, FontWeight.w600)),
-            if (trailing != null) Icon(trailing, size: 18, color: AppColors.text),
+            if (trailing != null)
+              Icon(trailing, size: 18, color: AppColors.text),
           ],
         ),
       ),
@@ -348,7 +405,12 @@ class OutlineChipButton extends StatelessWidget {
 
 /// Segmented control (Photo / Barcode / Search, Light / Moderate / Hard).
 class Segmented extends StatelessWidget {
-  const Segmented({super.key, required this.options, required this.index, required this.onChanged});
+  const Segmented({
+    super.key,
+    required this.options,
+    required this.index,
+    required this.onChanged,
+  });
 
   final List<String> options;
   final int index;
@@ -358,7 +420,10 @@ class Segmented extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+        color: AppColors.border,
+        borderRadius: BorderRadius.circular(14),
+      ),
       child: Row(
         spacing: 4,
         children: [
@@ -378,12 +443,22 @@ class Segmented extends StatelessWidget {
                       color: i == index ? AppColors.card : Colors.transparent,
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: i == index
-                          ? const [BoxShadow(color: Color(0x1F111827), blurRadius: 3, offset: Offset(0, 1))]
+                          ? const [
+                              BoxShadow(
+                                color: Color(0x1F111827),
+                                blurRadius: 3,
+                                offset: Offset(0, 1),
+                              ),
+                            ]
                           : const [],
                     ),
                     child: Text(
                       options[i],
-                      style: ts(14, i == index ? FontWeight.w700 : FontWeight.w500, i == index ? AppColors.text : AppColors.muted),
+                      style: ts(
+                        14,
+                        i == index ? FontWeight.w700 : FontWeight.w500,
+                        i == index ? AppColors.text : AppColors.muted,
+                      ),
                     ),
                   ),
                 ),
@@ -397,7 +472,12 @@ class Segmented extends StatelessWidget {
 
 /// Green toggle switch (200 ms).
 class ToggleSwitch extends StatelessWidget {
-  const ToggleSwitch({super.key, required this.value, required this.onChanged, required this.label});
+  const ToggleSwitch({
+    super.key,
+    required this.value,
+    required this.onChanged,
+    required this.label,
+  });
 
   final bool value;
   final ValueChanged<bool> onChanged;
@@ -430,7 +510,13 @@ class ToggleSwitch extends StatelessWidget {
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: Color(0x33000000), blurRadius: 3, offset: Offset(0, 1))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 3,
+                    offset: Offset(0, 1),
+                  ),
+                ],
               ),
             ),
           ),
@@ -442,7 +528,13 @@ class ToggleSwitch extends StatelessWidget {
 
 /// Full-width green primary button.
 class PrimaryButton extends StatelessWidget {
-  const PrimaryButton({super.key, required this.label, required this.onTap, this.color = AppColors.green, this.height = 54});
+  const PrimaryButton({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.color = AppColors.green,
+    this.height = 54,
+  });
 
   final String label;
   final VoidCallback onTap;
@@ -456,7 +548,10 @@ class PrimaryButton extends StatelessWidget {
       child: Container(
         height: height,
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Text(label, style: ts(16, FontWeight.w700, Colors.white)),
       ),
     );
@@ -489,13 +584,17 @@ class BackHeader extends StatelessWidget {
 Widget twoColumns(List<Widget> items, {double gap = 10}) {
   final rows = <Widget>[];
   for (var i = 0; i < items.length; i += 2) {
-    rows.add(Row(
-      spacing: gap,
-      children: [
-        Expanded(child: items[i]),
-        Expanded(child: i + 1 < items.length ? items[i + 1] : const SizedBox()),
-      ],
-    ));
+    rows.add(
+      Row(
+        spacing: gap,
+        children: [
+          Expanded(child: items[i]),
+          Expanded(
+            child: i + 1 < items.length ? items[i + 1] : const SizedBox(),
+          ),
+        ],
+      ),
+    );
   }
   return Column(spacing: gap, children: rows);
 }
@@ -507,9 +606,16 @@ Route<T> slideRoute<T>(Widget page) {
     reverseTransitionDuration: const Duration(milliseconds: 260),
     pageBuilder: (context, animation, secondaryAnimation) => page,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final a = CurvedAnimation(parent: animation, curve: Motion.standard, reverseCurve: Curves.easeInCubic);
+      final a = CurvedAnimation(
+        parent: animation,
+        curve: Motion.standard,
+        reverseCurve: Curves.easeInCubic,
+      );
       return SlideTransition(
-        position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(a),
+        position: Tween<Offset>(
+          begin: const Offset(1, 0),
+          end: Offset.zero,
+        ).animate(a),
         child: child,
       );
     },
@@ -517,13 +623,20 @@ Route<T> slideRoute<T>(Widget page) {
 }
 
 /// Dark toast with a check icon (slides up 250 ms, hides after 2.4 s).
-void showToast(BuildContext context, String message, {IconData icon = Icons.check_circle_rounded}) {
+void showToast(
+  BuildContext context,
+  String message, {
+  IconData icon = Icons.check_circle_rounded,
+}) {
   final messenger = ScaffoldMessenger.of(context);
   messenger.hideCurrentSnackBar();
   messenger.showSnackBar(toastBar(message, icon: icon));
 }
 
-SnackBar toastBar(String message, {IconData icon = Icons.check_circle_rounded}) {
+SnackBar toastBar(
+  String message, {
+  IconData icon = Icons.check_circle_rounded,
+}) {
   return SnackBar(
     behavior: SnackBarBehavior.floating,
     backgroundColor: AppColors.text,
@@ -534,7 +647,9 @@ SnackBar toastBar(String message, {IconData icon = Icons.check_circle_rounded}) 
       spacing: 10,
       children: [
         Icon(icon, color: AppColors.greenGlow, size: 20),
-        Expanded(child: Text(message, style: ts(14, FontWeight.w500, Colors.white))),
+        Expanded(
+          child: Text(message, style: ts(14, FontWeight.w500, Colors.white)),
+        ),
       ],
     ),
   );

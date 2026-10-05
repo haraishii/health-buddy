@@ -72,8 +72,14 @@ class _ScanMealScreenState extends State<ScanMealScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_mode == 1 ? 'Barcode found' : 'Detected', style: ts(13, FontWeight.w400, AppColors.muted)),
-                        Text('Chicken rice bowl', style: ts(20, FontWeight.w700)),
+                        Text(
+                          _mode == 1 ? 'Barcode found' : 'Detected',
+                          style: ts(13, FontWeight.w400, AppColors.muted),
+                        ),
+                        Text(
+                          'Chicken rice bowl',
+                          style: ts(20, FontWeight.w700),
+                        ),
                       ],
                     ),
                   ),
@@ -83,10 +89,18 @@ class _ScanMealScreenState extends State<ScanMealScreen> {
               const Row(
                 spacing: 8,
                 children: [
-                  Expanded(child: _MacroTile('640', 'kcal', AppColors.orangeSoft)),
-                  Expanded(child: _MacroTile('28 g', 'Protein', AppColors.greenSoft)),
-                  Expanded(child: _MacroTile('82 g', 'Carbs', AppColors.blueSoft)),
-                  Expanded(child: _MacroTile('18 g', 'Fat', AppColors.purpleSoft)),
+                  Expanded(
+                    child: _MacroTile('640', 'kcal', AppColors.orangeSoft),
+                  ),
+                  Expanded(
+                    child: _MacroTile('28 g', 'Protein', AppColors.greenSoft),
+                  ),
+                  Expanded(
+                    child: _MacroTile('82 g', 'Carbs', AppColors.blueSoft),
+                  ),
+                  Expanded(
+                    child: _MacroTile('18 g', 'Fat', AppColors.purpleSoft),
+                  ),
                 ],
               ),
               Column(
@@ -98,12 +112,19 @@ class _ScanMealScreenState extends State<ScanMealScreen> {
                   ])
                     Container(
                       height: 42,
-                      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.divider))),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: AppColors.divider),
+                        ),
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(item.$1, style: ts(14)),
-                          Text(item.$2, style: ts(14, FontWeight.w400, AppColors.muted)),
+                          Text(
+                            item.$2,
+                            style: ts(14, FontWeight.w400, AppColors.muted),
+                          ),
                         ],
                       ),
                     ),
@@ -129,7 +150,11 @@ class _ScanMealScreenState extends State<ScanMealScreen> {
                   ),
                   Expanded(
                     flex: 2,
-                    child: PrimaryButton(label: 'Add to Lunch', height: 52, onTap: () => Navigator.of(sheetContext).pop(true)),
+                    child: PrimaryButton(
+                      label: 'Add to Lunch',
+                      height: 52,
+                      onTap: () => Navigator.of(sheetContext).pop(true),
+                    ),
                   ),
                 ],
               ),
@@ -148,7 +173,10 @@ class _ScanMealScreenState extends State<ScanMealScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const hints = ['Point the camera at your plate', 'Line up the barcode on the package'];
+    const hints = [
+      'Point the camera at your plate',
+      'Line up the barcode on the package',
+    ];
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -186,21 +214,43 @@ class _ScanMealScreenState extends State<ScanMealScreen> {
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
                                 color: AppColors.darkSoft,
-                                borderRadius: BorderRadius.circular(_mode == 0 ? 105 : 16),
+                                borderRadius: BorderRadius.circular(
+                                  _mode == 0 ? 105 : 16,
+                                ),
                               ),
-                              child: Text(hints[_mode], textAlign: TextAlign.center, style: ts(13, FontWeight.w400, const Color(0xFFB4BAC4))),
+                              child: Text(
+                                hints[_mode],
+                                textAlign: TextAlign.center,
+                                style: ts(
+                                  13,
+                                  FontWeight.w400,
+                                  const Color(0xFFB4BAC4),
+                                ),
+                              ),
                             ),
                           ),
-                          const Center(child: SizedBox(width: 280, height: 280, child: CustomPaint(painter: _CornersPainter()))),
+                          const Center(
+                            child: SizedBox(
+                              width: 280,
+                              height: 280,
+                              child: CustomPaint(painter: _CornersPainter()),
+                            ),
+                          ),
                           if (_phase != _ScanPhase.done) const ScanLine(),
                           Positioned(
                             left: 0,
                             right: 0,
                             bottom: 16,
                             child: Text(
-                              _phase == _ScanPhase.analyzing ? 'Analyzing your meal…' : 'Hold steady',
+                              _phase == _ScanPhase.analyzing
+                                  ? 'Analyzing your meal…'
+                                  : 'Hold steady',
                               textAlign: TextAlign.center,
-                              style: ts(13, FontWeight.w500, const Color(0xFFE5E7EB)),
+                              style: ts(
+                                13,
+                                FontWeight.w500,
+                                const Color(0xFFE5E7EB),
+                              ),
                             ),
                           ),
                         ],
@@ -219,18 +269,34 @@ class _ScanMealScreenState extends State<ScanMealScreen> {
                       decoration: BoxDecoration(
                         color: AppColors.green,
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFCDEFD7), width: 5),
+                        border: Border.all(
+                          color: const Color(0xFFCDEFD7),
+                          width: 5,
+                        ),
                       ),
                       child: _phase == _ScanPhase.analyzing
                           ? const Padding(
                               padding: EdgeInsets.all(20),
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              ),
                             )
-                          : Icon(_mode == 0 ? Icons.photo_camera_outlined : Icons.qr_code_scanner_rounded, color: Colors.white, size: 30),
+                          : Icon(
+                              _mode == 0
+                                  ? Icons.photo_camera_outlined
+                                  : Icons.qr_code_scanner_rounded,
+                              color: Colors.white,
+                              size: 30,
+                            ),
                     ),
                   ),
                 ),
-                Text('Tap to capture. Results can always be edited.', textAlign: TextAlign.center, style: ts(13, FontWeight.w400, AppColors.muted)),
+                Text(
+                  'Tap to capture. Results can always be edited.',
+                  textAlign: TextAlign.center,
+                  style: ts(13, FontWeight.w400, AppColors.muted),
+                ),
               ] else
                 Expanded(
                   child: Column(
@@ -243,43 +309,76 @@ class _ScanMealScreenState extends State<ScanMealScreen> {
                         decoration: InputDecoration(
                           hintText: 'Search food, e.g. nasi goreng',
                           hintStyle: ts(15, FontWeight.w400, AppColors.muted),
-                          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.muted),
+                          prefixIcon: const Icon(
+                            Icons.search_rounded,
+                            color: AppColors.muted,
+                          ),
                           filled: true,
                           fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                          ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.borderStrong),
+                            borderSide: const BorderSide(
+                              color: AppColors.borderStrong,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: AppColors.green, width: 1.5),
+                            borderSide: const BorderSide(
+                              color: AppColors.green,
+                              width: 1.5,
+                            ),
                           ),
                         ),
                       ),
-                      Text('Popular', style: ts(14, FontWeight.w700, AppColors.muted)),
+                      Text(
+                        'Popular',
+                        style: ts(14, FontWeight.w700, AppColors.muted),
+                      ),
                       Expanded(
                         child: ListView.separated(
                           itemCount: _popular.length,
-                          separatorBuilder: (context, i) => const SizedBox(height: 8),
+                          separatorBuilder: (context, i) =>
+                              const SizedBox(height: 8),
                           itemBuilder: (context, i) => FadeUp(
                             delayMs: i * 50,
                             child: AppCard(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
                               radius: 14,
-                              onTap: () => _addAndClose('${_popular[i].$1} added'),
+                              onTap: () =>
+                                  _addAndClose('${_popular[i].$1} added'),
                               child: Row(
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(_popular[i].$1, style: ts(15, FontWeight.w600)),
-                                        Text(_popular[i].$2, style: ts(12, FontWeight.w400, AppColors.muted)),
+                                        Text(
+                                          _popular[i].$1,
+                                          style: ts(15, FontWeight.w600),
+                                        ),
+                                        Text(
+                                          _popular[i].$2,
+                                          style: ts(
+                                            12,
+                                            FontWeight.w400,
+                                            AppColors.muted,
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
-                                  const Icon(Icons.add_circle_rounded, color: AppColors.green, size: 28),
+                                  const Icon(
+                                    Icons.add_circle_rounded,
+                                    color: AppColors.green,
+                                    size: 28,
+                                  ),
                                 ],
                               ),
                             ),
@@ -308,7 +407,10 @@ class _MacroTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         children: [
           Text(value, style: ts(16, FontWeight.w700)),

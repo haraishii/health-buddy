@@ -2,14 +2,23 @@
 // When a backend exists, add fromJson/toJson here without touching the screens.
 
 class UserProfile {
-  const UserProfile({required this.name, required this.status, required this.joined});
+  const UserProfile({
+    required this.name,
+    required this.status,
+    required this.joined,
+  });
   final String name;
   final String status;
   final String joined;
 }
 
 class DailyGoal {
-  const DailyGoal({required this.label, required this.current, required this.target, required this.unit});
+  const DailyGoal({
+    required this.label,
+    required this.current,
+    required this.target,
+    required this.unit,
+  });
   final String label;
   final double current;
   final double target;
@@ -29,7 +38,12 @@ class HealthScore {
 }
 
 class BalanceScores {
-  const BalanceScores({required this.nutrition, required this.stress, required this.sleep, required this.exercise});
+  const BalanceScores({
+    required this.nutrition,
+    required this.stress,
+    required this.sleep,
+    required this.exercise,
+  });
   final int nutrition;
   final int stress;
   final int sleep;
@@ -37,7 +51,14 @@ class BalanceScores {
 }
 
 class FoodItem {
-  const FoodItem({required this.name, required this.kcal, this.protein = 0, this.carbs = 0, this.fat = 0, this.tag});
+  const FoodItem({
+    required this.name,
+    required this.kcal,
+    this.protein = 0,
+    this.carbs = 0,
+    this.fat = 0,
+    this.tag,
+  });
   final String name;
   final int kcal;
   final int protein;
@@ -54,7 +75,12 @@ class Meal {
 }
 
 class ExerciseLog {
-  const ExerciseLog({required this.activity, required this.minutes, required this.intensity, required this.kcal});
+  const ExerciseLog({
+    required this.activity,
+    required this.minutes,
+    required this.intensity,
+    required this.kcal,
+  });
   final String activity;
   final int minutes;
   final String intensity;
@@ -70,7 +96,11 @@ class StressLog {
 }
 
 class ChatMessage {
-  const ChatMessage({required this.text, required this.fromUser, required this.time});
+  const ChatMessage({
+    required this.text,
+    required this.fromUser,
+    required this.time,
+  });
   final String text;
   final bool fromUser;
   final String time;

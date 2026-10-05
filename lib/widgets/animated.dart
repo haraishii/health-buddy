@@ -6,8 +6,12 @@ import '../theme.dart';
 import 'common.dart';
 
 /// A repeating controller (disabled when "reduce motion" is on).
-mixin _LoopMixin<T extends StatefulWidget> on State<T>, SingleTickerProviderStateMixin<T> {
-  late final AnimationController loop = AnimationController(vsync: this, duration: loopDuration);
+mixin _LoopMixin<T extends StatefulWidget>
+    on State<T>, SingleTickerProviderStateMixin<T> {
+  late final AnimationController loop = AnimationController(
+    vsync: this,
+    duration: loopDuration,
+  );
   Duration get loopDuration;
   bool get autoStart => true;
   bool _checked = false;
@@ -38,7 +42,8 @@ class RobotMascot extends StatefulWidget {
   State<RobotMascot> createState() => _RobotMascotState();
 }
 
-class _RobotMascotState extends State<RobotMascot> with SingleTickerProviderStateMixin, _LoopMixin<RobotMascot> {
+class _RobotMascotState extends State<RobotMascot>
+    with SingleTickerProviderStateMixin, _LoopMixin<RobotMascot> {
   // One 12 s cycle: 4 floats (3 s each) and 3 blinks (every 4 s).
   @override
   Duration get loopDuration => const Duration(seconds: 12);
@@ -92,11 +97,17 @@ class _RobotPainter extends CustomPainter {
     );
     canvas.drawCircle(const Offset(42, 6), 5, Paint()..color = AppColors.green);
 
-    final head = RRect.fromRectAndRadius(const Rect.fromLTWH(8, 18, 68, 50), const Radius.circular(22));
+    final head = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(8, 18, 68, 50),
+      const Radius.circular(22),
+    );
     canvas.drawRRect(head, white);
     canvas.drawRRect(head, outline);
     canvas.drawRRect(
-      RRect.fromRectAndRadius(const Rect.fromLTWH(16, 27, 52, 30), const Radius.circular(15)),
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(16, 27, 52, 30),
+        const Radius.circular(15),
+      ),
       Paint()..color = AppColors.dark,
     );
 
@@ -109,11 +120,20 @@ class _RobotPainter extends CustomPainter {
       canvas.save();
       canvas.translate(cx, 43);
       canvas.scale(1, eyeScale);
-      canvas.drawArc(Rect.fromCircle(center: const Offset(0, 3), radius: 6), math.pi, math.pi, false, eye);
+      canvas.drawArc(
+        Rect.fromCircle(center: const Offset(0, 3), radius: 6),
+        math.pi,
+        math.pi,
+        false,
+        eye,
+      );
       canvas.restore();
     }
 
-    final body = RRect.fromRectAndRadius(const Rect.fromLTWH(20, 70, 44, 24), const Radius.circular(12));
+    final body = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(20, 70, 44, 24),
+      const Radius.circular(12),
+    );
     canvas.drawRRect(body, white);
     canvas.drawRRect(body, outline);
     final heart = Path()
@@ -142,7 +162,8 @@ class TypingDots extends StatefulWidget {
   State<TypingDots> createState() => _TypingDotsState();
 }
 
-class _TypingDotsState extends State<TypingDots> with SingleTickerProviderStateMixin, _LoopMixin<TypingDots> {
+class _TypingDotsState extends State<TypingDots>
+    with SingleTickerProviderStateMixin, _LoopMixin<TypingDots> {
   @override
   Duration get loopDuration => const Duration(milliseconds: 1200);
 
@@ -163,20 +184,25 @@ class _TypingDotsState extends State<TypingDots> with SingleTickerProviderStateM
           spacing: 5,
           children: [
             for (var i = 0; i < 3; i++)
-              Builder(builder: (context) {
-                final b = _bump((loop.value - i * 0.125) % 1.0);
-                return Transform.translate(
-                  offset: Offset(0, -3 * b),
-                  child: Opacity(
-                    opacity: 0.3 + 0.7 * b,
-                    child: Container(
-                      width: 7,
-                      height: 7,
-                      decoration: const BoxDecoration(color: AppColors.green, shape: BoxShape.circle),
+              Builder(
+                builder: (context) {
+                  final b = _bump((loop.value - i * 0.125) % 1.0);
+                  return Transform.translate(
+                    offset: Offset(0, -3 * b),
+                    child: Opacity(
+                      opacity: 0.3 + 0.7 * b,
+                      child: Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: AppColors.green,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                },
+              ),
           ],
         ),
       ),
@@ -195,7 +221,8 @@ class BreathingCircle extends StatefulWidget {
   State<BreathingCircle> createState() => _BreathingCircleState();
 }
 
-class _BreathingCircleState extends State<BreathingCircle> with SingleTickerProviderStateMixin, _LoopMixin<BreathingCircle> {
+class _BreathingCircleState extends State<BreathingCircle>
+    with SingleTickerProviderStateMixin, _LoopMixin<BreathingCircle> {
   @override
   Duration get loopDuration => const Duration(seconds: 8);
 
@@ -220,7 +247,9 @@ class _BreathingCircleState extends State<BreathingCircle> with SingleTickerProv
       builder: (context, _) {
         final v = loop.value;
         final grow = 0.5 - 0.5 * math.cos(v * 2 * math.pi);
-        final label = !widget.running ? 'Ready' : (v < 0.5 ? 'Breathe in' : 'Breathe out');
+        final label = !widget.running
+            ? 'Ready'
+            : (v < 0.5 ? 'Breathe in' : 'Breathe out');
         return Column(
           mainAxisSize: MainAxisSize.min,
           spacing: 12,
@@ -235,11 +264,17 @@ class _BreathingCircleState extends State<BreathingCircle> with SingleTickerProv
                     width: 120,
                     height: 120,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(color: AppColors.purpleLight, shape: BoxShape.circle),
+                    decoration: const BoxDecoration(
+                      color: AppColors.purpleLight,
+                      shape: BoxShape.circle,
+                    ),
                     child: Container(
                       width: 80,
                       height: 80,
-                      decoration: const BoxDecoration(color: AppColors.purple, shape: BoxShape.circle),
+                      decoration: const BoxDecoration(
+                        color: AppColors.purple,
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
                 ),
@@ -262,7 +297,8 @@ class ScanLine extends StatefulWidget {
   State<ScanLine> createState() => _ScanLineState();
 }
 
-class _ScanLineState extends State<ScanLine> with SingleTickerProviderStateMixin, _LoopMixin<ScanLine> {
+class _ScanLineState extends State<ScanLine>
+    with SingleTickerProviderStateMixin, _LoopMixin<ScanLine> {
   @override
   Duration get loopDuration => const Duration(milliseconds: 1600);
 
@@ -280,7 +316,9 @@ class _ScanLineState extends State<ScanLine> with SingleTickerProviderStateMixin
               height: 2,
               decoration: const BoxDecoration(
                 color: AppColors.greenGlow,
-                boxShadow: [BoxShadow(color: AppColors.greenGlow, blurRadius: 12)],
+                boxShadow: [
+                  BoxShadow(color: AppColors.greenGlow, blurRadius: 12),
+                ],
               ),
             ),
           ),
@@ -292,7 +330,11 @@ class _ScanLineState extends State<ScanLine> with SingleTickerProviderStateMixin
 
 /// Tab icon that bounces 1 → 1.15 → 1 (250 ms) when selected.
 class BounceOnSelect extends StatefulWidget {
-  const BounceOnSelect({super.key, required this.selected, required this.child});
+  const BounceOnSelect({
+    super.key,
+    required this.selected,
+    required this.child,
+  });
 
   final bool selected;
   final Widget child;
@@ -301,13 +343,18 @@ class BounceOnSelect extends StatefulWidget {
   State<BounceOnSelect> createState() => _BounceOnSelectState();
 }
 
-class _BounceOnSelectState extends State<BounceOnSelect> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
+class _BounceOnSelectState extends State<BounceOnSelect>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 250),
+  );
 
   @override
   void didUpdateWidget(BounceOnSelect oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!oldWidget.selected && widget.selected && !reduceMotion(context)) _c.forward(from: 0);
+    if (!oldWidget.selected && widget.selected && !reduceMotion(context))
+      _c.forward(from: 0);
   }
 
   @override
@@ -320,7 +367,10 @@ class _BounceOnSelectState extends State<BounceOnSelect> with SingleTickerProvid
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _c,
-      builder: (context, child) => Transform.scale(scale: 1 + 0.15 * math.sin(_c.value * math.pi), child: child),
+      builder: (context, child) => Transform.scale(
+        scale: 1 + 0.15 * math.sin(_c.value * math.pi),
+        child: child,
+      ),
       child: widget.child,
     );
   }

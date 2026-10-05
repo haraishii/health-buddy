@@ -24,12 +24,46 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final goals = <({String label, String value, String total, double fraction, Color color})>[
-      (label: 'Steps', value: '6,240', total: '8,000', fraction: 6240 / 8000, color: AppColors.green),
-      (label: 'Water', value: '${_water.toStringAsFixed(2).replaceFirst(RegExp(r'0$'), '')} L', total: '2 L', fraction: _water / 2, color: AppColors.blue),
-      (label: 'Protein', value: '42 g', total: '60 g', fraction: 42 / 60, color: AppColors.orange),
-      (label: 'Sleep last night', value: '6 h 10 m', total: '8 h', fraction: 370 / 480, color: AppColors.purple),
-    ];
+    final goals =
+        <
+          ({
+            String label,
+            String value,
+            String total,
+            double fraction,
+            Color color,
+          })
+        >[
+          (
+            label: 'Steps',
+            value: '6,240',
+            total: '8,000',
+            fraction: 6240 / 8000,
+            color: AppColors.green,
+          ),
+          (
+            label: 'Water',
+            value:
+                '${_water.toStringAsFixed(2).replaceFirst(RegExp(r'0$'), '')} L',
+            total: '2 L',
+            fraction: _water / 2,
+            color: AppColors.blue,
+          ),
+          (
+            label: 'Protein',
+            value: '42 g',
+            total: '60 g',
+            fraction: 42 / 60,
+            color: AppColors.orange,
+          ),
+          (
+            label: 'Sleep last night',
+            value: '6 h 10 m',
+            total: '8 h',
+            fraction: 370 / 480,
+            color: AppColors.purple,
+          ),
+        ];
     final done = goals.where((g) => g.fraction >= 1).length;
 
     return SingleChildScrollView(
@@ -45,15 +79,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Good morning,', style: ts(14, FontWeight.w400, AppColors.muted)),
-                      Text('Annida', style: ts(28, FontWeight.w800).copyWith(letterSpacing: -0.5, height: 1.15)),
+                      Text(
+                        'Good morning,',
+                        style: ts(14, FontWeight.w400, AppColors.muted),
+                      ),
+                      Text(
+                        'Annida',
+                        style: ts(
+                          28,
+                          FontWeight.w800,
+                        ).copyWith(letterSpacing: -0.5, height: 1.15),
+                      ),
                     ],
                   ),
                 ),
                 SquareIconButton(
                   icon: Icons.notifications_none_rounded,
                   label: 'Notifications',
-                  onTap: () => showToast(context, 'No new notifications', icon: Icons.notifications_none_rounded),
+                  onTap: () => showToast(
+                    context,
+                    'No new notifications',
+                    icon: Icons.notifications_none_rounded,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 PressScale(
@@ -63,8 +110,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 44,
                     height: 44,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(color: AppColors.greenTint, shape: BoxShape.circle),
-                    child: Text('A', style: ts(17, FontWeight.w700, AppColors.greenDark)),
+                    decoration: const BoxDecoration(
+                      color: AppColors.greenTint,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      'A',
+                      style: ts(17, FontWeight.w700, AppColors.greenDark),
+                    ),
                   ),
                 ),
               ],
@@ -87,8 +140,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     center: (t) => Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('${(85 * t).round()}', style: ts(32, FontWeight.w800, AppColors.greenDark).copyWith(height: 1)),
-                        Text('/100', style: ts(12, FontWeight.w400, AppColors.muted)),
+                        Text(
+                          '${(85 * t).round()}',
+                          style: ts(
+                            32,
+                            FontWeight.w800,
+                            AppColors.greenDark,
+                          ).copyWith(height: 1),
+                        ),
+                        Text(
+                          '/100',
+                          style: ts(12, FontWeight.w400, AppColors.muted),
+                        ),
                       ],
                     ),
                   ),
@@ -100,12 +163,28 @@ class _HomeScreenState extends State<HomeScreen> {
                         Text('Health Score', style: ts(16, FontWeight.w700)),
                         const Pill('↑ 12% vs last week', size: 13),
                         Text.rich(
-                          TextSpan(children: [
-                            const TextSpan(text: 'Stress '),
-                            TextSpan(text: 'Low', style: ts(13, FontWeight.w700, AppColors.purpleDark)),
-                            const TextSpan(text: '   Activity '),
-                            TextSpan(text: 'Moderate', style: ts(13, FontWeight.w700, AppColors.blueDark)),
-                          ]),
+                          TextSpan(
+                            children: [
+                              const TextSpan(text: 'Stress '),
+                              TextSpan(
+                                text: 'Low',
+                                style: ts(
+                                  13,
+                                  FontWeight.w700,
+                                  AppColors.purpleDark,
+                                ),
+                              ),
+                              const TextSpan(text: '   Activity '),
+                              TextSpan(
+                                text: 'Moderate',
+                                style: ts(
+                                  13,
+                                  FontWeight.w700,
+                                  AppColors.blueDark,
+                                ),
+                              ),
+                            ],
+                          ),
                           style: ts(13, FontWeight.w400, AppColors.muted),
                         ),
                       ],
@@ -130,7 +209,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text("Today's goals", style: ts(17, FontWeight.w700)),
-                      Text('$done of ${goals.length} done', style: ts(13, FontWeight.w400, AppColors.muted)),
+                      Text(
+                        '$done of ${goals.length} done',
+                        style: ts(13, FontWeight.w400, AppColors.muted),
+                      ),
                     ],
                   ),
                   for (var i = 0; i < goals.length; i++)
@@ -143,15 +225,24 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Text(goals[i].label, style: ts(14)),
                             Text.rich(
-                              TextSpan(children: [
-                                TextSpan(text: goals[i].value, style: ts(14, FontWeight.w700)),
-                                TextSpan(text: ' / ${goals[i].total}'),
-                              ]),
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: goals[i].value,
+                                    style: ts(14, FontWeight.w700),
+                                  ),
+                                  TextSpan(text: ' / ${goals[i].total}'),
+                                ],
+                              ),
                               style: ts(14, FontWeight.w400, AppColors.muted),
                             ),
                           ],
                         ),
-                        ProgressBar(value: goals[i].fraction, color: goals[i].color, delayMs: 300 + i * 80),
+                        ProgressBar(
+                          value: goals[i].fraction,
+                          color: goals[i].color,
+                          delayMs: 300 + i * 80,
+                        ),
                       ],
                     ),
                 ],
@@ -173,21 +264,27 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: AppColors.blue,
                     bg: AppColors.blueSoft,
                     label: 'Log Exercise',
-                    onTap: () => Navigator.of(context).push(slideRoute(const LogExerciseScreen())),
+                    onTap: () =>
+                        Navigator.of(context)
+                            .push(slideRoute(const LogExerciseScreen())),
                   ),
                   _QuickTile(
                     icon: Icons.photo_camera_outlined,
                     color: AppColors.green,
                     bg: AppColors.greenSoft,
                     label: 'Scan Meal',
-                    onTap: () => Navigator.of(context).push(slideRoute(const ScanMealScreen())),
+                    onTap: () =>
+                        Navigator.of(context)
+                            .push(slideRoute(const ScanMealScreen())),
                   ),
                   _QuickTile(
                     icon: Icons.sentiment_satisfied_alt_rounded,
                     color: AppColors.purple,
                     bg: AppColors.purpleSoft,
                     label: 'Stress Check',
-                    onTap: () => Navigator.of(context).push(slideRoute(const StressCheckScreen())),
+                    onTap: () =>
+                        Navigator.of(context)
+                            .push(slideRoute(const StressCheckScreen())),
                   ),
                   _QuickTile(
                     icon: Icons.water_drop_outlined,
@@ -214,15 +311,31 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: 12,
                 children: [
-                  const IconBadge(Icons.smart_toy_outlined, color: Colors.white, bg: AppColors.purple, size: 40, iconSize: 22, radius: 12),
+                  const IconBadge(
+                    Icons.smart_toy_outlined,
+                    color: Colors.white,
+                    bg: AppColors.purple,
+                    size: 40,
+                    iconSize: 22,
+                    radius: 12,
+                  ),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       spacing: 4,
                       children: [
-                        Text('Tip from your AI Coach', style: ts(15, FontWeight.w700, AppColors.purpleDeep)),
-                        Text('You slept 1.5 h less this week. Aim for bed before 11:00 PM tonight.', style: ts(14).copyWith(height: 1.45)),
-                        Text('Ask a question →', style: ts(13, FontWeight.w700, AppColors.purpleDark)),
+                        Text(
+                          'Tip from your AI Coach',
+                          style: ts(15, FontWeight.w700, AppColors.purpleDeep),
+                        ),
+                        Text(
+                          'You slept 1.5 h less this week. Aim for bed before 11:00 PM tonight.',
+                          style: ts(14).copyWith(height: 1.45),
+                        ),
+                        Text(
+                          'Ask a question →',
+                          style: ts(13, FontWeight.w700, AppColors.purpleDark),
+                        ),
                       ],
                     ),
                   ),
@@ -237,7 +350,13 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _QuickTile extends StatelessWidget {
-  const _QuickTile({required this.icon, required this.color, required this.bg, required this.label, required this.onTap});
+  const _QuickTile({
+    required this.icon,
+    required this.color,
+    required this.bg,
+    required this.label,
+    required this.onTap,
+  });
 
   final IconData icon;
   final Color color;
@@ -256,7 +375,14 @@ class _QuickTile extends StatelessWidget {
         spacing: 10,
         children: [
           IconBadge(icon, color: color, bg: bg),
-          Expanded(child: Text(label, style: ts(14, FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
+          Expanded(
+            child: Text(
+              label,
+              style: ts(14, FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
