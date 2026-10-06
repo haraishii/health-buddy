@@ -5,13 +5,7 @@ import 'package:flutter/material.dart';
 import '../theme.dart';
 import 'common.dart';
 
-void _drawLabel(
-  Canvas canvas,
-  String text,
-  Offset anchor,
-  TextStyle style, {
-  TextAlign align = TextAlign.center,
-}) {
+void _drawLabel(Canvas canvas, String text, Offset anchor, TextStyle style, {TextAlign align = TextAlign.center}) {
   final tp = TextPainter(
     text: TextSpan(text: text, style: style),
     textDirection: TextDirection.ltr,
@@ -72,12 +66,7 @@ class _RingPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(
-      stroke / 2,
-      stroke / 2,
-      size.width - stroke,
-      size.height - stroke,
-    );
+    final rect = Rect.fromLTWH(stroke / 2, stroke / 2, size.width - stroke, size.height - stroke);
     final base = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
@@ -124,26 +113,14 @@ class LineChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final base = DefaultTextStyle.of(context).style;
     return Semantics(
-      label:
-          'Line chart: ${[for (var i = 0; i < values.length; i++) '${labels[i]} ${values[i].round()}'].join(', ')}',
+      label: 'Line chart: ${[for (var i = 0; i < values.length; i++) '${labels[i]} ${values[i].round()}'].join(', ')}',
       child: Reveal(
         delayMs: delayMs,
         curve: Curves.easeOutCubic,
         builder: (context, t) => SizedBox(
           height: height,
           width: double.infinity,
-          child: CustomPaint(
-            painter: _LinePainter(
-              values,
-              labels,
-              maxY,
-              color,
-              yTicks,
-              showYLabels,
-              t,
-              base,
-            ),
-          ),
+          child: CustomPaint(painter: _LinePainter(values, labels, maxY, color, yTicks, showYLabels, t, base)),
         ),
       ),
     );
@@ -151,16 +128,7 @@ class LineChart extends StatelessWidget {
 }
 
 class _LinePainter extends CustomPainter {
-  _LinePainter(
-    this.values,
-    this.labels,
-    this.maxY,
-    this.color,
-    this.yTicks,
-    this.showYLabels,
-    this.t,
-    this.base,
-  );
+  _LinePainter(this.values, this.labels, this.maxY, this.color, this.yTicks, this.showYLabels, this.t, this.base);
 
   final List<double> values;
   final List<String> labels;
@@ -173,44 +141,25 @@ class _LinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final chart = Rect.fromLTRB(
-      showYLabels ? 26 : 4,
-      20,
-      size.width - 4,
-      size.height - 22,
-    );
+    final chart = Rect.fromLTRB(showYLabels ? 26 : 4, 20, size.width - 4, size.height - 22);
     final grid = Paint()
       ..color = AppColors.track
       ..strokeWidth = 1;
-    final small = base.copyWith(
-      fontSize: 10,
-      color: AppColors.muted,
-      fontWeight: FontWeight.w400,
-      height: 1,
-    );
+    final small = base.copyWith(fontSize: 10, color: AppColors.muted, fontWeight: FontWeight.w400, height: 1);
 
     for (final tick in yTicks) {
       final y = chart.bottom - tick / maxY * chart.height;
       canvas.drawLine(Offset(chart.left, y), Offset(chart.right, y), grid);
-      if (showYLabels)
-        _drawLabel(
-          canvas,
-          tick.round().toString(),
-          Offset(chart.left - 6, y),
-          small,
-          align: TextAlign.right,
-        );
+      if (showYLabels) {
+        _drawLabel(canvas, tick.round().toString(), Offset(chart.left - 6, y), small, align: TextAlign.right);
+      }
     }
 
     final n = values.length;
     final inset = 10.0;
     final step = (chart.width - inset * 2) / (n - 1);
     final pts = [
-      for (var i = 0; i < n; i++)
-        Offset(
-          chart.left + inset + step * i,
-          chart.bottom - values[i] / maxY * chart.height,
-        ),
+      for (var i = 0; i < n; i++) Offset(chart.left + inset + step * i, chart.bottom - values[i] / maxY * chart.height),
     ];
 
     final line = Path()..moveTo(pts.first.dx, pts.first.dy);
@@ -225,10 +174,7 @@ class _LinePainter extends CustomPainter {
         ..lineTo(pts.last.dx, chart.bottom)
         ..lineTo(pts.first.dx, chart.bottom)
         ..close();
-      canvas.drawPath(
-        area,
-        Paint()..color = color.withValues(alpha: 0.09 * areaT),
-      );
+      canvas.drawPath(area, Paint()..color = color.withValues(alpha: 0.09 * areaT));
     }
 
     // Line draws in.
@@ -244,12 +190,7 @@ class _LinePainter extends CustomPainter {
 
     // Dots pop in one by one + value labels.
     final dot = Paint()..color = color;
-    final valueStyle = base.copyWith(
-      fontSize: 10.5,
-      fontWeight: FontWeight.w700,
-      color: AppColors.text,
-      height: 1,
-    );
+    final valueStyle = base.copyWith(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.text, height: 1);
     for (var i = 0; i < n; i++) {
       final threshold = n == 1 ? 0.0 : i / (n - 1) * 0.9;
       final local = ((t - threshold) / 0.1).clamp(0.0, 1.0);
@@ -262,12 +203,7 @@ class _LinePainter extends CustomPainter {
           valueStyle.copyWith(color: AppColors.text.withValues(alpha: local)),
         );
       }
-      _drawLabel(
-        canvas,
-        labels[i],
-        Offset(pts[i].dx, size.height - 8),
-        small.copyWith(fontSize: 10.5),
-      );
+      _drawLabel(canvas, labels[i], Offset(pts[i].dx, size.height - 8), small.copyWith(fontSize: 10.5));
     }
   }
 
@@ -299,17 +235,14 @@ class BarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final base = DefaultTextStyle.of(context).style;
     return Semantics(
-      label:
-          'Bar chart: ${[for (var i = 0; i < values.length; i++) '${labels[i]} ${values[i]}'].join(', ')}',
+      label: 'Bar chart: ${[for (var i = 0; i < values.length; i++) '${labels[i]} ${values[i]}'].join(', ')}',
       child: Reveal(
         delayMs: delayMs,
         duration: const Duration(milliseconds: 800),
         builder: (context, t) => SizedBox(
           height: height,
           width: double.infinity,
-          child: CustomPaint(
-            painter: _BarPainter(values, labels, maxY, color, t, base),
-          ),
+          child: CustomPaint(painter: _BarPainter(values, labels, maxY, color, t, base)),
         ),
       ),
     );
@@ -317,14 +250,7 @@ class BarChart extends StatelessWidget {
 }
 
 class _BarPainter extends CustomPainter {
-  _BarPainter(
-    this.values,
-    this.labels,
-    this.maxY,
-    this.color,
-    this.t,
-    this.base,
-  );
+  _BarPainter(this.values, this.labels, this.maxY, this.color, this.t, this.base);
 
   final List<double> values;
   final List<String> labels;
@@ -347,17 +273,10 @@ class _BarPainter extends CustomPainter {
     final slot = chart.width / n;
     final barW = math.min(14.0, slot * 0.55);
     const stagger = 0.06;
-    final small = base.copyWith(
-      fontSize: 10.5,
-      color: AppColors.muted,
-      height: 1,
-    );
+    final small = base.copyWith(fontSize: 10.5, color: AppColors.muted, height: 1);
     final paint = Paint()..color = color;
     for (var i = 0; i < n; i++) {
-      final local = ((t - i * stagger) / (1 - (n - 1) * stagger)).clamp(
-        0.0,
-        1.0,
-      );
+      final local = ((t - i * stagger) / (1 - (n - 1) * stagger)).clamp(0.0, 1.0);
       final h = values[i] / maxY * chart.height * local;
       final cx = chart.left + slot * (i + 0.5);
       if (h > 0) {
@@ -382,12 +301,7 @@ class _BarPainter extends CustomPainter {
 
 class RadarChart extends StatelessWidget {
   /// Order: top, right, bottom, left.
-  const RadarChart({
-    super.key,
-    required this.names,
-    required this.values,
-    this.delayMs = 400,
-  });
+  const RadarChart({super.key, required this.names, required this.values, this.delayMs = 400});
 
   final List<String> names;
   final List<double> values;
@@ -397,17 +311,13 @@ class RadarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final base = DefaultTextStyle.of(context).style;
     return Semantics(
-      label: [
-        for (var i = 0; i < names.length; i++)
-          '${names[i]} ${values[i].round()}',
-      ].join(', '),
+      label: [for (var i = 0; i < names.length; i++) '${names[i]} ${values[i].round()}'].join(', '),
       child: AspectRatio(
         aspectRatio: 1,
         child: Reveal(
           delayMs: delayMs,
           duration: const Duration(milliseconds: 500),
-          builder: (context, t) =>
-              CustomPaint(painter: _RadarPainter(names, values, t, base)),
+          builder: (context, t) => CustomPaint(painter: _RadarPainter(names, values, t, base)),
         ),
       ),
     );
@@ -436,22 +346,16 @@ class _RadarPainter extends CustomPainter {
       ..color = AppColors.borderStrong
       ..strokeWidth = 1 / s;
     for (final f in [1.0, 0.66, 0.33]) {
-      final path = Path()
-        ..addPolygon([for (final d in dirs) c + d * r * f], true);
+      final path = Path()..addPolygon([for (final d in dirs) c + d * r * f], true);
       canvas.drawPath(path, gridPaint);
     }
     canvas.drawLine(c + dirs[0] * r, c + dirs[2] * r, gridPaint);
     canvas.drawLine(c + dirs[3] * r, c + dirs[1] * r, gridPaint);
 
     final scale = 0.6 + 0.4 * t;
-    final pts = [
-      for (var i = 0; i < 4; i++) c + dirs[i] * r * (values[i] / 100) * scale,
-    ];
+    final pts = [for (var i = 0; i < 4; i++) c + dirs[i] * r * (values[i] / 100) * scale];
     final shape = Path()..addPolygon(pts, true);
-    canvas.drawPath(
-      shape,
-      Paint()..color = AppColors.green.withValues(alpha: 0.18 * t),
-    );
+    canvas.drawPath(shape, Paint()..color = AppColors.green.withValues(alpha: 0.18 * t));
     canvas.drawPath(
       shape,
       Paint()
@@ -465,31 +369,12 @@ class _RadarPainter extends CustomPainter {
       canvas.drawCircle(p, 4, dot);
     }
 
-    final nameStyle = base.copyWith(
-      fontSize: 12,
-      color: AppColors.muted,
-      height: 1,
-    );
-    final valStyle = base.copyWith(
-      fontSize: 16,
-      fontWeight: FontWeight.w800,
-      color: AppColors.text,
-      height: 1,
-    );
-    const anchors = [
-      Offset(100, 16),
-      Offset(176, 92),
-      Offset(100, 172),
-      Offset(24, 92),
-    ];
+    final nameStyle = base.copyWith(fontSize: 12, color: AppColors.muted, height: 1);
+    final valStyle = base.copyWith(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.text, height: 1);
+    const anchors = [Offset(100, 16), Offset(176, 92), Offset(100, 172), Offset(24, 92)];
     for (var i = 0; i < 4; i++) {
       _drawLabel(canvas, names[i], anchors[i], nameStyle);
-      _drawLabel(
-        canvas,
-        values[i].round().toString(),
-        anchors[i] + const Offset(0, 18),
-        valStyle,
-      );
+      _drawLabel(canvas, values[i].round().toString(), anchors[i] + const Offset(0, 18), valStyle);
     }
     canvas.restore();
   }
@@ -507,10 +392,7 @@ class ParkScene extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(14),
-      child: CustomPaint(
-        painter: _ParkPainter(),
-        child: const SizedBox.expand(),
-      ),
+      child: CustomPaint(painter: _ParkPainter(), child: const SizedBox.expand()),
     );
   }
 }
@@ -520,38 +402,16 @@ class _ParkPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    canvas.drawRect(
-      Offset.zero & size,
-      Paint()..color = const Color(0xFFEFF7F1),
-    );
-    canvas.drawCircle(
-      Offset(w * 0.75, h * 0.24),
-      w * 0.11,
-      Paint()..color = const Color(0xFFFDE9B8),
-    );
+    canvas.drawRect(Offset.zero & size, Paint()..color = const Color(0xFFEFF7F1));
+    canvas.drawCircle(Offset(w * 0.75, h * 0.24), w * 0.11, Paint()..color = const Color(0xFFFDE9B8));
     // Faint city buildings.
     final city = Paint()..color = const Color(0xFFD9E7F5);
-    canvas.drawRect(
-      Rect.fromLTWH(w * 0.12, h * 0.30, w * 0.12, h * 0.35),
-      city,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(w * 0.28, h * 0.20, w * 0.10, h * 0.45),
-      city,
-    );
-    canvas.drawRect(
-      Rect.fromLTWH(w * 0.55, h * 0.34, w * 0.14, h * 0.31),
-      city,
-    );
+    canvas.drawRect(Rect.fromLTWH(w * 0.12, h * 0.30, w * 0.12, h * 0.35), city);
+    canvas.drawRect(Rect.fromLTWH(w * 0.28, h * 0.20, w * 0.10, h * 0.45), city);
+    canvas.drawRect(Rect.fromLTWH(w * 0.55, h * 0.34, w * 0.14, h * 0.31), city);
     // Hills.
-    canvas.drawOval(
-      Rect.fromLTWH(-w * 0.3, h * 0.58, w * 1.0, h * 0.7),
-      Paint()..color = const Color(0xFFBFE5C9),
-    );
-    canvas.drawOval(
-      Rect.fromLTWH(w * 0.3, h * 0.62, w * 1.0, h * 0.7),
-      Paint()..color = const Color(0xFFA7DAB5),
-    );
+    canvas.drawOval(Rect.fromLTWH(-w * 0.3, h * 0.58, w * 1.0, h * 0.7), Paint()..color = const Color(0xFFBFE5C9));
+    canvas.drawOval(Rect.fromLTWH(w * 0.3, h * 0.62, w * 1.0, h * 0.7), Paint()..color = const Color(0xFFA7DAB5));
     // Footpath.
     final path = Path()
       ..moveTo(w * 0.2, h)
@@ -562,15 +422,8 @@ class _ParkPainter extends CustomPainter {
     canvas.drawPath(path, Paint()..color = const Color(0xFFF4ECDD));
     // Trees.
     void tree(double x, double y, double r) {
-      canvas.drawRect(
-        Rect.fromLTWH(x - 1.5, y, 3, r * 1.4),
-        Paint()..color = const Color(0xFF8B6B4A),
-      );
-      canvas.drawCircle(
-        Offset(x, y),
-        r,
-        Paint()..color = const Color(0xFF6CC283),
-      );
+      canvas.drawRect(Rect.fromLTWH(x - 1.5, y, 3, r * 1.4), Paint()..color = const Color(0xFF8B6B4A));
+      canvas.drawCircle(Offset(x, y), r, Paint()..color = const Color(0xFF6CC283));
     }
 
     tree(w * 0.16, h * 0.58, w * 0.11);
