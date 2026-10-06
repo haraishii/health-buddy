@@ -78,32 +78,23 @@ class AppShell extends StatelessWidget {
       builder: (context, index, _) => Scaffold(
         body: SafeArea(
           bottom: false,
-          // Tab switch: crossfade + small slide (220 ms).
+          // Ganti tab: crossfade + geser sedikit (220 ms).
           child: AnimatedSwitcher(
             duration: reduceMotion(context) ? Duration.zero : Motion.tab,
             switchInCurve: Motion.standard,
             switchOutCurve: Curves.easeOut,
-            layoutBuilder: (current, previous) => Stack(
-              fit: StackFit.expand,
-              children: [...previous, if (current != null) current],
-            ),
+            layoutBuilder: (current, previous) => Stack(fit: StackFit.expand, children: [...previous, ?current]),
             transitionBuilder: (child, animation) => FadeTransition(
               opacity: animation,
               child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.025, 0),
-                  end: Offset.zero,
-                ).animate(animation),
+                position: Tween<Offset>(begin: const Offset(0.025, 0), end: Offset.zero).animate(animation),
                 child: child,
               ),
             ),
             child: KeyedSubtree(key: ValueKey<int>(index), child: _page(index)),
           ),
         ),
-        bottomNavigationBar: _BottomNav(
-          index: index,
-          onTap: (i) => currentTab.value = i,
-        ),
+        bottomNavigationBar: _BottomNav(index: index, onTap: (i) => currentTab.value = i),
       ),
     );
   }
@@ -147,31 +138,18 @@ class _BottomNav extends StatelessWidget {
                             BounceOnSelect(
                               selected: i == index,
                               child: Icon(
-                                i == index
-                                    ? _tabs[i].activeIcon
-                                    : _tabs[i].icon,
+                                i == index ? _tabs[i].activeIcon : _tabs[i].icon,
                                 size: 25,
-                                color: i == index
-                                    ? AppColors.green
-                                    : AppColors.muted,
+                                color: i == index ? AppColors.green : AppColors.muted,
                               ),
                             ),
                             AnimatedDefaultTextStyle(
                               duration: const Duration(milliseconds: 150),
-                              style:
-                                  ts(
-                                    12,
-                                    i == index
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                    i == index
-                                        ? AppColors.greenDark
-                                        : AppColors.muted,
-                                  ).copyWith(
-                                    fontFamily: DefaultTextStyle.of(context)
-                                        .style
-                                        .fontFamily,
-                                  ),
+                              style: ts(
+                                12,
+                                i == index ? FontWeight.w700 : FontWeight.w500,
+                                i == index ? AppColors.greenDark : AppColors.muted,
+                              ).copyWith(fontFamily: DefaultTextStyle.of(context).style.fontFamily),
                               child: Text(_tabs[i].label),
                             ),
                           ],

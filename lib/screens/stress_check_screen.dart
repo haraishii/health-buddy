@@ -16,14 +16,7 @@ class _StressCheckScreenState extends State<StressCheckScreen> {
   final _factors = <String>{'Exams'};
   bool _breathing = false;
 
-  static const _factorNames = [
-    'Exams',
-    'Assignments',
-    'Sleep',
-    'Friends',
-    'Family',
-    'Money',
-  ];
+  static const _factorNames = ['Exams', 'Assignments', 'Sleep', 'Friends', 'Family', 'Money'];
 
   (String, IconData) get _mood {
     if (_level <= 3) return ('Calm', Icons.sentiment_very_satisfied_rounded);
@@ -59,30 +52,18 @@ class _StressCheckScreenState extends State<StressCheckScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     spacing: 14,
                     children: [
-                      Text(
-                        'How stressed do you feel right now?',
-                        style: ts(17, FontWeight.w700),
-                      ),
+                      Text('How stressed do you feel right now?', style: ts(17, FontWeight.w700)),
                       Row(
                         spacing: 12,
                         children: [
                           Container(
                             width: 56,
                             height: 56,
-                            decoration: const BoxDecoration(
-                              color: AppColors.purpleSoft,
-                              shape: BoxShape.circle,
-                            ),
+                            decoration: const BoxDecoration(color: AppColors.purpleSoft, shape: BoxShape.circle),
                             child: AnimatedSwitcher(
                               duration: const Duration(milliseconds: 200),
-                              transitionBuilder: (child, a) =>
-                                  ScaleTransition(scale: a, child: child),
-                              child: Icon(
-                                mood.$2,
-                                key: ValueKey(mood.$2),
-                                color: AppColors.purple,
-                                size: 34,
-                              ),
+                              transitionBuilder: (child, a) => ScaleTransition(scale: a, child: child),
+                              child: Icon(mood.$2, key: ValueKey(mood.$2), color: AppColors.purple, size: 34),
                             ),
                           ),
                           Column(
@@ -93,27 +74,13 @@ class _StressCheckScreenState extends State<StressCheckScreen> {
                                   children: [
                                     TextSpan(
                                       text: '$_level',
-                                      style: ts(
-                                        28,
-                                        FontWeight.w800,
-                                        AppColors.purpleDark,
-                                      ).copyWith(height: 1),
+                                      style: ts(28, FontWeight.w800, AppColors.purpleDark).copyWith(height: 1),
                                     ),
-                                    TextSpan(
-                                      text: ' /10',
-                                      style: ts(
-                                        15,
-                                        FontWeight.w500,
-                                        AppColors.muted,
-                                      ),
-                                    ),
+                                    TextSpan(text: ' /10', style: ts(15, FontWeight.w500, AppColors.muted)),
                                   ],
                                 ),
                               ),
-                              Text(
-                                mood.$1,
-                                style: ts(14, FontWeight.w400, AppColors.muted),
-                              ),
+                              Text(mood.$1, style: ts(14, FontWeight.w400, AppColors.muted)),
                             ],
                           ),
                         ],
@@ -137,25 +104,15 @@ class _StressCheckScreenState extends State<StressCheckScreen> {
                                   duration: const Duration(milliseconds: 150),
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: i == _level
-                                        ? AppColors.purpleDark
-                                        : Colors.white,
+                                    color: i == _level ? AppColors.purpleDark : Colors.white,
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: i == _level
-                                          ? AppColors.purpleDark
-                                          : AppColors.borderStrong,
+                                      color: i == _level ? AppColors.purpleDark : AppColors.borderStrong,
                                     ),
                                   ),
                                   child: Text(
                                     '$i',
-                                    style: ts(
-                                      15,
-                                      FontWeight.w700,
-                                      i == _level
-                                          ? Colors.white
-                                          : AppColors.text,
-                                    ),
+                                    style: ts(15, FontWeight.w700, i == _level ? Colors.white : AppColors.text),
                                   ),
                                 ),
                               ),
@@ -165,14 +122,8 @@ class _StressCheckScreenState extends State<StressCheckScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            '1 = calm',
-                            style: ts(12, FontWeight.w400, AppColors.muted),
-                          ),
-                          Text(
-                            '10 = very stressed',
-                            style: ts(12, FontWeight.w400, AppColors.muted),
-                          ),
+                          Text('1 = calm', style: ts(12, FontWeight.w400, AppColors.muted)),
+                          Text('10 = very stressed', style: ts(12, FontWeight.w400, AppColors.muted)),
                         ],
                       ),
                     ],
@@ -189,10 +140,7 @@ class _StressCheckScreenState extends State<StressCheckScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     spacing: 12,
                     children: [
-                      Text(
-                        "What's on your mind?",
-                        style: ts(17, FontWeight.w700),
-                      ),
+                      Text("What's on your mind?", style: ts(17, FontWeight.w700)),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -200,27 +148,17 @@ class _StressCheckScreenState extends State<StressCheckScreen> {
                           for (final f in _factorNames)
                             PressScale(
                               label: f,
-                              onTap: () => setState(
-                                () => _factors.contains(f)
-                                    ? _factors.remove(f)
-                                    : _factors.add(f),
-                              ),
+                              onTap: () => setState(() => _factors.contains(f) ? _factors.remove(f) : _factors.add(f)),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 150),
                                 height: 44,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: _factors.contains(f)
-                                      ? AppColors.purpleSoft
-                                      : Colors.white,
+                                  color: _factors.contains(f) ? AppColors.purpleSoft : Colors.white,
                                   borderRadius: BorderRadius.circular(99),
                                   border: Border.all(
-                                    color: _factors.contains(f)
-                                        ? AppColors.purple
-                                        : AppColors.borderStrong,
+                                    color: _factors.contains(f) ? AppColors.purple : AppColors.borderStrong,
                                   ),
                                 ),
                                 child: Text(
@@ -228,9 +166,7 @@ class _StressCheckScreenState extends State<StressCheckScreen> {
                                   style: ts(
                                     14,
                                     FontWeight.w600,
-                                    _factors.contains(f)
-                                        ? AppColors.purpleDeep
-                                        : AppColors.text,
+                                    _factors.contains(f) ? AppColors.purpleDeep : AppColors.text,
                                   ),
                                 ),
                               ),
@@ -254,10 +190,7 @@ class _StressCheckScreenState extends State<StressCheckScreen> {
                     children: [
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(
-                          '1-minute breathing',
-                          style: ts(17, FontWeight.w700),
-                        ),
+                        child: Text('1-minute breathing', style: ts(17, FontWeight.w700)),
                       ),
                       BreathingCircle(running: _breathing),
                       Text(
