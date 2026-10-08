@@ -2,12 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
-import '../widgets/animated.dart';
-import '../widgets/common.dart';
-import 'log_exercise_screen.dart';
-import 'scan_meal_screen.dart';
-import 'stress_check_screen.dart';
+import '../../../../app/navigation/app_tab_controller.dart';
+import '../../../../theme.dart';
+import '../../../../widgets/animated.dart';
+import '../../../../widgets/common.dart';
+import '../../../exercise/presentation/pages/log_exercise_screen.dart';
+import '../../../food/presentation/pages/scan_meal_screen.dart';
+import '../../../stress/presentation/pages/stress_check_screen.dart';
 
 class _ChatMsg {
   const _ChatMsg(this.text, this.fromUser);

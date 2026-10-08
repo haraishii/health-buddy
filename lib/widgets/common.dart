@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 
-/// Active tab in the tab bar (0 Home, 1 Analytics, 2 AI Coach, 3 Food, 4 Profile).
-final ValueNotifier<int> currentTab = ValueNotifier<int>(0);
-
 bool reduceMotion(BuildContext context) => MediaQuery.maybeDisableAnimationsOf(context) ?? false;
 
 /// Format 1420 -> "1,420".

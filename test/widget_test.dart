@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:health_buddy/app/health_buddy_app.dart';
 import 'package:health_buddy/data/dummy_data.dart';
-import 'package:health_buddy/main.dart';
 
 void main() {
   testWidgets('App opens on Home and can switch to Analytics', (tester) async {

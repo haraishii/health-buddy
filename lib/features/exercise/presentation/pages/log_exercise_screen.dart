@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
-import '../widgets/common.dart';
+import '../../../../theme.dart';
+import '../../../../widgets/common.dart';
 
 class LogExerciseScreen extends StatefulWidget {
   const LogExerciseScreen({super.key});

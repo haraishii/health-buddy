@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
-import '../widgets/animated.dart';
-import '../widgets/common.dart';
+import '../../../../theme.dart';
+import '../../../../widgets/animated.dart';
+import '../../../../widgets/common.dart';
 
 enum _ScanPhase { idle, analyzing, done }
 

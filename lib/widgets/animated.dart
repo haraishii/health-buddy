@@ -310,7 +310,9 @@ class _BounceOnSelectState extends State<BounceOnSelect> with SingleTickerProvid
   @override
   void didUpdateWidget(BounceOnSelect oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!oldWidget.selected && widget.selected && !reduceMotion(context)) _c.forward(from: 0);
+    if (!oldWidget.selected && widget.selected && !reduceMotion(context)) {
+      _c.forward(from: 0);
+    }
   }
 
   @override

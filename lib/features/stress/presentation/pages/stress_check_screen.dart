@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
-import '../widgets/animated.dart';
-import '../widgets/common.dart';
+import '../../../../theme.dart';
+import '../../../../widgets/animated.dart';
+import '../../../../widgets/common.dart';
 
 class StressCheckScreen extends StatefulWidget {
   const StressCheckScreen({super.key});

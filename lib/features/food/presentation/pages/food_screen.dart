@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../theme.dart';
-import '../widgets/charts.dart';
-import '../widgets/common.dart';
+import '../../../../theme.dart';
+import '../../../../widgets/charts.dart';
+import '../../../../widgets/common.dart';
 import 'scan_meal_screen.dart';
 
 class FoodScreen extends StatelessWidget {
