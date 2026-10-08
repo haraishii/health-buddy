@@ -59,17 +59,8 @@ class Motion {
 }
 
 /// Text style shorthand: ts(16, FontWeight.w700, AppColors.muted)
-TextStyle ts(
-  double size, [
-  FontWeight weight = FontWeight.w400,
-  Color color = AppColors.text,
-]) {
-  return TextStyle(
-    fontSize: size,
-    fontWeight: weight,
-    color: color,
-    height: 1.35,
-  );
+TextStyle ts(double size, [FontWeight weight = FontWeight.w400, Color color = AppColors.text]) {
+  return TextStyle(fontSize: size, fontWeight: weight, color: color, height: 1.35);
 }
 
 ThemeData buildTheme() {
@@ -77,19 +68,13 @@ ThemeData buildTheme() {
   final base = ThemeData(
     useMaterial3: true,
     fontFamily: 'Figtree',
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: AppColors.green,
-      surface: AppColors.bg,
-    ),
+    colorScheme: ColorScheme.fromSeed(seedColor: AppColors.green, surface: AppColors.bg),
     scaffoldBackgroundColor: AppColors.bg,
   );
   final textTheme = base.textTheme;
   // FONT_END
   return base.copyWith(
-    textTheme: textTheme.apply(
-      bodyColor: AppColors.text,
-      displayColor: AppColors.text,
-    ),
+    textTheme: textTheme.apply(bodyColor: AppColors.text, displayColor: AppColors.text),
     splashFactory: NoSplash.splashFactory,
     highlightColor: Colors.transparent,
   );
