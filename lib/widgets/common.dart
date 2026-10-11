@@ -129,7 +129,11 @@ class _PressScaleState extends State<PressScale> {
         onTapUp: (_) => _set(false),
         onTapCancel: () => _set(false),
         onTap: widget.onTap,
-        child: AnimatedScale(scale: _down ? widget.scale : 1, duration: Motion.fast, child: widget.child),
+        child: AnimatedScale(
+          scale: _down ? widget.scale : 1,
+          duration: reduceMotion(context) ? Duration.zero : Motion.fast,
+          child: widget.child,
+        ),
       ),
     );
   }
