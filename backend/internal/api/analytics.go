@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"errors"
 	"math"
 	"net/http"
 	"time"
@@ -66,7 +65,8 @@ type goalProgress struct {
 	Unit    string   `json:"unit"`
 }
 
-// getSummary: GET /api/v1/me/summary?date= returns what Home and the Food page need for one day.
+// getSummary: GET /api/v1/me/summary?date= returns everything Home, Food, Profile and the AI Coach header
+// need for one day, plus the 7 days ending on it (Health Score, activity level, tip).
 func (s *Server) getSummary(w http.ResponseWriter, r *http.Request, userID int64) {
 	day, err := parseDate(r.URL.Query().Get("date"))
 	if err != nil {
@@ -74,36 +74,19 @@ func (s *Server) getSummary(w http.ResponseWriter, r *http.Request, userID int64
 		return
 	}
 	ctx := r.Context()
-	u, err := s.loadUser(r, userID)
+	p, err := s.loadPeriod(ctx, userID, day.AddDate(0, 0, -6), day)
 	if err != nil {
 		serverError(w, err)
 		return
 	}
-	stats, err := s.dayStats(ctx, userID, day, day)
-	if err != nil {
-		serverError(w, err)
-		return
-	}
-	today := stats[0]
-
-	var targets *Targets
-	var targetsError *string
-	if t, err := s.targetsFor(ctx, u); err == nil {
-		targets = &t
-	} else if errors.Is(err, errProfileIncomplete) || errors.Is(err, errNoTargets) {
-		msg := err.Error()
-		targetsError = &msg
-	} else {
-		serverError(w, err)
-		return
-	}
+	today := p.last()
 
 	// target reads one goal from the targets; nil when the profile is incomplete or the goal is unknown.
 	target := func(get func(*Targets) *float64) *float64 {
-		if targets == nil {
+		if p.targets == nil {
 			return nil
 		}
-		return get(targets)
+		return get(p.targets)
 	}
 	ptr := func(v float64) *float64 { return &v }
 	steps, sleep := 0.0, 0.0
@@ -133,16 +116,52 @@ func (s *Server) getSummary(w http.ResponseWriter, r *http.Request, userID int64
 	} else if len(items) > 0 {
 		latestStress = &items[0]
 	}
+	// Stress label: today's check-in, otherwise the band of the 7-day average.
+	var stressLevel *string
+	if latestStress != nil {
+		stressLevel = latestStress.Category
+	} else if p.now.Stress != nil {
+		if stressLevel, err = s.stressBand(ctx, *p.now.Stress); err != nil {
+			serverError(w, err)
+			return
+		}
+	}
+
+	tips, err := s.matchingTips(ctx, p)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	var tip *Tip
+	if len(tips) > 0 {
+		tip = &tips[0]
+	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"date":          day.Format(dateLayout),
-		"user":          u,
-		"totals":        today,
-		"goals":         goals,
-		"targets":       targets,
-		"targets_error": targetsError,
-		"latest_stress": latestStress,
+		"date":           day.Format(dateLayout),
+		"user":           p.user,
+		"totals":         today,
+		"goals":          goals,
+		"targets":        p.targets,
+		"targets_error":  p.targetsError,
+		"latest_stress":  latestStress,
+		"stress_level":   stressLevel,
+		"activity_level": p.activityLevel(),
+		"health_score":   summarizeScores(p.scores(p.days), p.scores(p.prevDays)),
+		"week_averages":  p.now,
+		"tip":            tip,
 	})
+}
+
+// stressBand maps a 1-10 level to Low / Medium / High using Package 4B.
+func (s *Server) stressBand(ctx context.Context, level float64) (*string, error) {
+	var category string
+	err := s.db.QueryRow(ctx, `SELECT category FROM stress_score_bands WHERE $1 BETWEEN scale_min AND scale_max`,
+		int(math.Round(level))).Scan(&category)
+	if isNoRows(err) {
+		return nil, nil
+	}
+	return &category, err
 }
 
 type periodAverages struct {
@@ -156,7 +175,9 @@ type periodAverages struct {
 	SleepHours        *float64 `json:"sleep_hours"`
 	Stress            *float64 `json:"stress"`
 	CaloriesBurned    float64  `json:"calories_burned"`
+	ExerciseMinutes   float64  `json:"exercise_minutes"`
 	ExerciseDays      int      `json:"exercise_days"`
+	LoggedFoodDays    int      `json:"logged_food_days"`
 	StressExerciseDay *float64 `json:"stress_on_exercise_days"`
 	StressRestDay     *float64 `json:"stress_on_rest_days"`
 	HighStressDays    int      `json:"high_stress_days"`
@@ -166,13 +187,18 @@ func averages(days []DayStats) periodAverages {
 	var a periodAverages
 	var steps, sleep, stress, stressEx, stressRest []float64
 	for _, d := range days {
-		a.CaloriesIn += d.CaloriesIn
-		a.ProteinG += d.ProteinG
-		a.CarbsG += d.CarbsG
-		a.FatG += d.FatG
-		a.FiberG += d.FiberG
+		// Nutrition averages only count days with food logged, so a forgotten day does not look like fasting.
+		if d.CaloriesIn > 0 {
+			a.LoggedFoodDays++
+			a.CaloriesIn += d.CaloriesIn
+			a.ProteinG += d.ProteinG
+			a.CarbsG += d.CarbsG
+			a.FatG += d.FatG
+			a.FiberG += d.FiberG
+		}
 		a.WaterMl += d.WaterMl
 		a.CaloriesBurned += d.CaloriesBurned
+		a.ExerciseMinutes += float64(d.ExerciseMinutes)
 		if d.ExerciseMinutes > 0 {
 			a.ExerciseDays++
 		}
@@ -194,14 +220,17 @@ func averages(days []DayStats) periodAverages {
 			}
 		}
 	}
-	if n := float64(len(days)); n > 0 {
+	if n := float64(a.LoggedFoodDays); n > 0 {
 		a.CaloriesIn = round1(a.CaloriesIn / n)
 		a.ProteinG = round1(a.ProteinG / n)
 		a.CarbsG = round1(a.CarbsG / n)
 		a.FatG = round1(a.FatG / n)
 		a.FiberG = round1(a.FiberG / n)
+	}
+	if n := float64(len(days)); n > 0 {
 		a.WaterMl = round1(a.WaterMl / n)
 		a.CaloriesBurned = round1(a.CaloriesBurned / n)
+		a.ExerciseMinutes = round1(a.ExerciseMinutes / n)
 	}
 	a.Steps, a.SleepHours, a.Stress = mean(steps), mean(sleep), mean(stress)
 	a.StressExerciseDay, a.StressRestDay = mean(stressEx), mean(stressRest)
@@ -231,27 +260,20 @@ func percentChange(now, before *float64) *float64 {
 	return &p
 }
 
-// getAnalytics: GET /api/v1/me/analytics?from=&to= (default: last 7 days). Also compares with the
-// period of the same length just before, which AI Insights and Trends at a Glance use.
-// The Health Score is not computed here: its weights are still an open decision (brief, question 4).
+// getAnalytics: GET /api/v1/me/analytics?from=&to= (default: last 7 days). Compares with the period of the
+// same length just before it for the trends, and adds the Health Score and AI Insights sentences.
 func (s *Server) getAnalytics(w http.ResponseWriter, r *http.Request, userID int64) {
 	from, to, ok := dateRange(w, r)
 	if !ok {
 		return
 	}
 	ctx := r.Context()
-	days, err := s.dayStats(ctx, userID, from, to)
+	p, err := s.loadPeriod(ctx, userID, from, to)
 	if err != nil {
 		serverError(w, err)
 		return
 	}
-	length := len(days)
-	prevDays, err := s.dayStats(ctx, userID, from.AddDate(0, 0, -length), from.AddDate(0, 0, -1))
-	if err != nil {
-		serverError(w, err)
-		return
-	}
-	now, prev := averages(days), averages(prevDays)
+	now, prev := p.now, p.prev
 
 	var sleepDiff *float64
 	if now.SleepHours != nil && prev.SleepHours != nil {
@@ -261,38 +283,58 @@ func (s *Server) getAnalytics(w http.ResponseWriter, r *http.Request, userID int
 
 	// Percent of daily target for the Nutrition chart, when the profile allows targets.
 	var nutritionPercent map[string]float64
-	if u, err := s.loadUser(r, userID); err != nil {
-		serverError(w, err)
-		return
-	} else if t, err := s.targetsFor(ctx, u); err == nil {
+	if t := p.targets; t != nil {
 		pct := func(v, target float64) float64 { return math.Round(v / target * 100) }
 		nutritionPercent = map[string]float64{
 			"calories": pct(now.CaloriesIn, t.EnergyKcal), "protein": pct(now.ProteinG, t.ProteinG),
 			"carbs": pct(now.CarbsG, t.CarbsG), "fat": pct(now.FatG, t.FatG), "fiber": pct(now.FiberG, t.FiberG),
 			"water": pct(now.WaterMl, t.WaterMl),
 		}
-	} else if !errors.Is(err, errProfileIncomplete) && !errors.Is(err, errNoTargets) {
+	}
+
+	t, err := s.loadTemplates(ctx, p.user.Language)
+	if err != nil {
 		serverError(w, err)
 		return
 	}
+	tips, err := s.matchingTips(ctx, p)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	var recommendation *string
+	if len(tips) > 0 {
+		recommendation = &tips[0].Text
+	}
+	healthyNow, healthyPrev := float64(p.healthyMeals), float64(p.prevHealthyMeals)
+	scores := p.scores(p.days)
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"from":              from.Format(dateLayout),
 		"to":                to.Format(dateLayout),
-		"days":              days,
+		"days":              p.days,
+		"scores":            scores,
+		"health_score":      summarizeScores(scores, p.scores(p.prevDays)),
 		"averages":          now,
 		"previous_averages": prev,
 		"nutrition_percent": nutritionPercent,
 		"vs_previous": map[string]any{
-			"sleep_hours_diff":      sleepDiff,
-			"steps_change_percent":  percentChange(now.Steps, prev.Steps),
-			"stress_change_percent": percentChange(now.Stress, prev.Stress),
+			"sleep_hours_diff":         sleepDiff,
+			"steps_change_percent":     percentChange(now.Steps, prev.Steps),
+			"stress_change_percent":    percentChange(now.Stress, prev.Stress),
+			"exercise_change_percent":  percentChange(&now.ExerciseMinutes, &prev.ExerciseMinutes),
+			"healthy_meals_change_pct": percentChange(&healthyNow, &healthyPrev),
 		},
+		"healthy_meals":          p.healthyMeals,
+		"healthy_meals_sentence": p.healthyMealsSentence(t),
 		// Numbers for the insight_templates sentences, e.g. IN01 "stress drops {percent}% on exercise days".
 		"insights": map[string]any{
 			"stress_exercise_vs_rest_percent": percentChange(now.StressExerciseDay, now.StressRestDay),
 			"high_stress_days":                now.HighStressDays,
 			"exercise_days":                   now.ExerciseDays,
 		},
+		"insight_sentences": p.insightSentences(t),
+		"recommendation":    recommendation,
+		"tips":              tips,
 	})
 }

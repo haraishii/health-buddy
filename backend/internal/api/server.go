@@ -61,6 +61,8 @@ func (s *Server) Routes() http.Handler {
 	mux.Handle("POST /api/v1/me/water", user(s.addWater))
 	mux.Handle("PUT /api/v1/me/sleep/{date}", user(s.putSleep))
 	mux.Handle("PUT /api/v1/me/steps/{date}", user(s.putSteps))
+	mux.Handle("POST /api/v1/me/coach/ask", user(s.askCoach))
+	mux.Handle("GET /api/v1/me/coach/history", user(s.coachHistory))
 
 	return s.recoverer(s.logRequests(s.cors(mux)))
 }

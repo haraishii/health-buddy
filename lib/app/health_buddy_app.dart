@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../data/api/session.dart';
 import '../features/ai_coach/presentation/pages/ai_coach_screen.dart';
 import '../features/analytics/presentation/pages/analytics_screen.dart';
+import '../features/auth/presentation/pages/login_screen.dart';
 import '../features/food/presentation/pages/food_screen.dart';
 import '../features/home/presentation/pages/home_screen.dart';
 import '../features/profile/presentation/pages/profile_screen.dart';
@@ -22,19 +24,94 @@ void runHealthBuddyApp() {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
-  runApp(const HealthBuddyApp());
+  final session = Session()..restore();
+  runApp(HealthBuddyApp(session: session));
 }
 
-class HealthBuddyApp extends StatelessWidget {
-  const HealthBuddyApp({super.key});
+class HealthBuddyApp extends StatefulWidget {
+  const HealthBuddyApp({super.key, required this.session});
+
+  final Session session;
+
+  @override
+  State<HealthBuddyApp> createState() => _HealthBuddyAppState();
+}
+
+class _HealthBuddyAppState extends State<HealthBuddyApp> {
+  final _navigator = GlobalKey<NavigatorState>();
+  late SessionStatus _status = widget.session.status;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.session.addListener(_onSessionChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.session.removeListener(_onSessionChanged);
+    super.dispose();
+  }
+
+  // Signing in or out closes pushed screens (Register, Log Exercise, ...) so the new root page shows.
+  void _onSessionChanged() {
+    final status = widget.session.status;
+    if (status == _status) return;
+    _status = status;
+    _navigator.currentState?.popUntil((route) => route.isFirst);
+    if (status == SessionStatus.signedOut) currentTab.value = 0;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Health Buddy',
-      debugShowCheckedModeBanner: false,
-      theme: buildTheme(),
-      home: const AppShell(),
+    return SessionScope(
+      session: widget.session,
+      child: MaterialApp(
+        title: 'Health Buddy',
+        debugShowCheckedModeBanner: false,
+        theme: buildTheme(),
+        navigatorKey: _navigator,
+        home: const _AuthGate(),
+      ),
+    );
+  }
+}
+
+/// Splash while the saved token is read, then the login screen or the app.
+class _AuthGate extends StatelessWidget {
+  const _AuthGate();
+
+  @override
+  Widget build(BuildContext context) {
+    final status = SessionScope.of(context).status;
+    return AnimatedSwitcher(
+      duration: reduceMotion(context) ? Duration.zero : Motion.enter,
+      switchInCurve: Motion.standard,
+      child: switch (status) {
+        SessionStatus.restoring => const _Splash(),
+        SessionStatus.signedOut => const LoginScreen(),
+        SessionStatus.signedIn => const AppShell(),
+      },
+    );
+  }
+}
+
+class _Splash extends StatelessWidget {
+  const _Splash();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: IconBadge(
+          Icons.favorite_rounded,
+          color: AppColors.green,
+          bg: AppColors.greenSoft,
+          size: 64,
+          iconSize: 32,
+          radius: 20,
+        ),
+      ),
     );
   }
 }

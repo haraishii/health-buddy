@@ -29,6 +29,11 @@ func main() {
 	reset := flag.Bool("reset", false, "DROP ALL TABLES first (implies -migrate); development only")
 	noServe := flag.Bool("no-serve", false, "exit after migrate/seed instead of starting the server")
 	flag.Parse()
+	// On hosts without a shell (e.g. Render's free plan), SEED_DUMMY_DATA=true does the same as -seed.
+	// Seed files are recorded once applied, so leaving it on does not insert the data twice.
+	if os.Getenv("SEED_DUMMY_DATA") == "true" {
+		*seed = true
+	}
 
 	cfg, err := config.Load()
 	if err != nil {

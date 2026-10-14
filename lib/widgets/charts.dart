@@ -87,6 +87,7 @@ class _RingPainter extends CustomPainter {
 
 /* ───────────────────────── Line chart ───────────────────────── */
 
+/// [values] may contain `double.nan` for days without data: the line skips them and joins the days that have data.
 class LineChart extends StatelessWidget {
   const LineChart({
     super.key,
@@ -113,7 +114,8 @@ class LineChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final base = DefaultTextStyle.of(context).style;
     return Semantics(
-      label: 'Line chart: ${[for (var i = 0; i < values.length; i++) '${labels[i]} ${values[i].round()}'].join(', ')}',
+      label:
+          'Line chart: ${[for (var i = 0; i < values.length; i++) '${labels[i]} ${values[i].isNaN ? 'no data' : values[i].round()}'].join(', ')}',
       child: Reveal(
         delayMs: delayMs,
         curve: Curves.easeOutCubic,
@@ -157,53 +159,61 @@ class _LinePainter extends CustomPainter {
 
     final n = values.length;
     final inset = 10.0;
-    final step = (chart.width - inset * 2) / (n - 1);
-    final pts = [
-      for (var i = 0; i < n; i++) Offset(chart.left + inset + step * i, chart.bottom - values[i] / maxY * chart.height),
+    final step = n == 1 ? 0.0 : (chart.width - inset * 2) / (n - 1);
+    double x(int i) => n == 1 ? chart.center.dx : chart.left + inset + step * i;
+    final valid = [
+      for (var i = 0; i < n; i++)
+        if (!values[i].isNaN) i,
     ];
+    final pts = {for (final i in valid) i: Offset(x(i), chart.bottom - values[i] / maxY * chart.height)};
 
-    final line = Path()..moveTo(pts.first.dx, pts.first.dy);
-    for (final p in pts.skip(1)) {
-      line.lineTo(p.dx, p.dy);
-    }
+    if (valid.isNotEmpty) {
+      final line = Path()..moveTo(pts[valid.first]!.dx, pts[valid.first]!.dy);
+      for (final i in valid.skip(1)) {
+        line.lineTo(pts[i]!.dx, pts[i]!.dy);
+      }
 
-    // Soft area fill, fades in last.
-    final areaT = ((t - 0.6) / 0.4).clamp(0.0, 1.0);
-    if (areaT > 0) {
-      final area = Path.from(line)
-        ..lineTo(pts.last.dx, chart.bottom)
-        ..lineTo(pts.first.dx, chart.bottom)
-        ..close();
-      canvas.drawPath(area, Paint()..color = color.withValues(alpha: 0.09 * areaT));
-    }
+      // Soft area fill, fades in last.
+      final areaT = ((t - 0.6) / 0.4).clamp(0.0, 1.0);
+      if (areaT > 0 && valid.length > 1) {
+        final area = Path.from(line)
+          ..lineTo(pts[valid.last]!.dx, chart.bottom)
+          ..lineTo(pts[valid.first]!.dx, chart.bottom)
+          ..close();
+        canvas.drawPath(area, Paint()..color = color.withValues(alpha: 0.09 * areaT));
+      }
 
-    // Line draws in.
-    final stroke = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
-      ..strokeJoin = StrokeJoin.round
-      ..strokeCap = StrokeCap.round;
-    for (final m in line.computeMetrics()) {
-      canvas.drawPath(m.extractPath(0, m.length * t), stroke);
+      // Line draws in.
+      final stroke = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..strokeJoin = StrokeJoin.round
+        ..strokeCap = StrokeCap.round;
+      for (final m in line.computeMetrics()) {
+        canvas.drawPath(m.extractPath(0, m.length * t), stroke);
+      }
     }
 
     // Dots pop in one by one + value labels.
     final dot = Paint()..color = color;
     final valueStyle = base.copyWith(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.text, height: 1);
     for (var i = 0; i < n; i++) {
-      final threshold = n == 1 ? 0.0 : i / (n - 1) * 0.9;
-      final local = ((t - threshold) / 0.1).clamp(0.0, 1.0);
-      if (local > 0) {
-        canvas.drawCircle(pts[i], 4 * local, dot);
-        _drawLabel(
-          canvas,
-          values[i].round().toString(),
-          pts[i] - const Offset(0, 12),
-          valueStyle.copyWith(color: AppColors.text.withValues(alpha: local)),
-        );
+      final p = pts[i];
+      if (p != null) {
+        final threshold = n == 1 ? 0.0 : i / (n - 1) * 0.9;
+        final local = ((t - threshold) / 0.1).clamp(0.0, 1.0);
+        if (local > 0) {
+          canvas.drawCircle(p, 4 * local, dot);
+          _drawLabel(
+            canvas,
+            values[i].round().toString(),
+            p - const Offset(0, 12),
+            valueStyle.copyWith(color: AppColors.text.withValues(alpha: local)),
+          );
+        }
       }
-      _drawLabel(canvas, labels[i], Offset(pts[i].dx, size.height - 8), small.copyWith(fontSize: 10.5));
+      _drawLabel(canvas, labels[i], Offset(x(i), size.height - 8), small.copyWith(fontSize: 10.5));
     }
   }
 

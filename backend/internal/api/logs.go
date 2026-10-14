@@ -16,6 +16,7 @@ type MealLog struct {
 	FoodID       *string   `db:"food_id" json:"food_id"`
 	Barcode      *string   `db:"barcode" json:"barcode"`
 	Name         string    `db:"name" json:"name"`
+	Category     string    `db:"category" json:"category"` // Package 1 category, "packaged" or "custom"
 	Servings     float64   `db:"servings" json:"servings"`
 	CaloriesKcal float64   `db:"calories_kcal" json:"calories_kcal"`
 	ProteinG     float64   `db:"protein_g" json:"protein_g"`
@@ -25,13 +26,34 @@ type MealLog struct {
 	SugarG       *float64  `db:"sugar_g" json:"sugar_g"`
 	SodiumMg     *float64  `db:"sodium_mg" json:"sodium_mg"`
 	CreatedAt    time.Time `db:"created_at" json:"created_at"`
+	ServingGrams float64   `db:"serving_grams" json:"-"`
+	IsDrink      bool      `db:"is_drink" json:"-"`
+	Labels       []string  `db:"-" json:"labels"`
+}
+
+// nutrients gives per-serving values (the log stores totals for all servings) for the label rules.
+func (m *MealLog) nutrients() nutrientValues {
+	per := func(v float64) *float64 { x := v / m.Servings; return &x }
+	perN := func(v *float64) *float64 {
+		if v == nil {
+			return nil
+		}
+		return per(*v)
+	}
+	return nutrientValues{ServingGrams: m.ServingGrams, IsDrink: m.IsDrink, Values: map[string]*float64{
+		"calories_kcal": per(m.CaloriesKcal), "protein_g": per(m.ProteinG), "carbs_g": per(m.CarbsG),
+		"fat_g": per(m.FatG), "fiber_g": perN(m.FiberG), "sugar_g": perN(m.SugarG), "sodium_mg": perN(m.SodiumMg),
+	}}
 }
 
 // mealSelect reads meal logs from a relation named m (the table, or a CTE of inserted rows).
 const mealSelect = `
 	SELECT m.id, to_char(m.logged_on, 'YYYY-MM-DD') AS logged_on, m.meal_time, m.food_id, m.barcode,
-	       COALESCE(m.custom_name, f.name, p.brand || ' ' || p.product_name) AS name, m.servings,
-	       m.calories_kcal, m.protein_g, m.carbs_g, m.fat_g, m.fiber_g, m.sugar_g, m.sodium_mg, m.created_at
+	       COALESCE(m.custom_name, f.name, p.brand || ' ' || p.product_name) AS name,
+	       COALESCE(f.category, CASE WHEN m.barcode IS NOT NULL THEN 'packaged' ELSE 'custom' END) AS category,
+	       m.servings, m.calories_kcal, m.protein_g, m.carbs_g, m.fat_g, m.fiber_g, m.sugar_g, m.sodium_mg,
+	       m.created_at, COALESCE(f.serving_grams, p.serving_size, 0)::float8 AS serving_grams,
+	       COALESCE(f.category = 'drink', p.serving_unit = 'ml', false) AS is_drink
 	FROM m
 	LEFT JOIN foods f ON f.id = m.food_id
 	LEFT JOIN packaged_products p ON p.barcode = m.barcode`
@@ -49,6 +71,9 @@ func (s *Server) listMeals(w http.ResponseWriter, r *http.Request, userID int64)
 		userID, day)
 	if err != nil {
 		serverError(w, err)
+		return
+	}
+	if !s.addMealLabels(w, r, items) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"date": day.Format(dateLayout), "items": items})
@@ -146,7 +171,22 @@ func (s *Server) createMeal(w http.ResponseWriter, r *http.Request, userID int64
 		serverError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, item)
+	items := []MealLog{item}
+	if s.addMealLabels(w, r, items) {
+		writeJSON(w, http.StatusCreated, items[0])
+	}
+}
+
+func (s *Server) addMealLabels(w http.ResponseWriter, r *http.Request, items []MealLog) bool {
+	rules, err := s.labelRules(r.Context())
+	if err != nil {
+		serverError(w, err)
+		return false
+	}
+	for i := range items {
+		items[i].Labels = evaluateLabels(rules, items[i].nutrients())
+	}
+	return true
 }
 
 func (s *Server) deleteMeal(w http.ResponseWriter, r *http.Request, userID int64) {

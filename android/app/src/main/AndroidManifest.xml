@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Needed in release builds to call the Health Buddy API (debug builds get it from src/debug). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="health_buddy"
         android:name="${applicationName}"

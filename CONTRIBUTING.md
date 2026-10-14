@@ -35,7 +35,7 @@ chore: add CI workflow
 
 ## Code rules
 
-- **Hardcoded data lives only in `lib/data/dummy_data.dart`.** Screens must not contain sample numbers. When we move to a backend, only this file changes.
+- **All data comes from the API** (`lib/data/api/`, backend in `backend/`). Screens must not contain sample numbers or texts; wrap each screen's data in `ApiBuilder` (`lib/widgets/api_builder.dart`), which shows the shimmer skeleton, the error card and cached data. After saving anything, call `session.dataChanged()` so the other screens reload.
 - Always use `AppColors` and `ts()` from `theme.dart` for colors and text styles; no raw hex codes in screens.
 - One screen per file in `lib/screens/`. A component used by two or more screens moves to `lib/widgets/`.
 - Shared files (`theme.dart`, `widgets/common.dart`) change only through a PR reviewed by Erwin.

@@ -9,6 +9,9 @@ Data Requirements Brief (Packages 1-7), user accounts (sign up / sign in), and t
 
 ## Run it
 
+To run it on Render with Supabase (no local Go or Postgres needed), follow
+[DEPLOY_RENDER.md](DEPLOY_RENDER.md) (Bahasa Indonesia, step by step).
+
 **Option A: Docker** (no local Go or Postgres needed)
 
 ```bash
@@ -34,6 +37,7 @@ go test ./...
 | `-seed` | Also apply pending files in `db/seeds/` (dummy data, dev only) |
 | `-reset` | Drop all tables first (dev only) |
 | `-no-serve` | Exit after migrating/seeding |
+| env `SEED_DUMMY_DATA=true` | Same as `-seed`, for hosts without a shell (Render) |
 
 Each SQL file runs once and is recorded in `schema_migrations` / `seed_runs`. To change the schema,
 add a new file (`0003_...sql`); never edit a file that has already been applied.
@@ -80,15 +84,18 @@ an omitted date means "today" in the server's time zone.
 | `POST /api/v1/auth/signin` | `{email, password}` → token + user | |
 | `GET /api/v1/me`, `PATCH /api/v1/me` | Profile; PATCH any of `name, status, birth_date, sex, height_cm, weight_kg, life_stage, steps_target` | Profile |
 | `GET /api/v1/me/targets` | Daily goals from Package 5 by age, sex, life stage | Profile, Food, Home |
-| `GET /api/v1/me/summary?date=` | Day totals, goal progress, latest stress | Home, Food |
-| `GET /api/v1/me/analytics?from=&to=` | Per-day series, averages, % of targets, change vs previous period, insight numbers | Analytics, AI Insights |
+| `PATCH /api/v1/me` (settings) | also `reminder_daily, reminder_bedtime, bedtime_time (HH:MM), weekly_summary, language (en/id), clear_steps_target` | Profile > Settings |
+| `GET /api/v1/me/summary?date=` | Day totals, goal progress, Health Score, stress and activity level, tip | Home, Food, Profile, AI Coach |
+| `GET /api/v1/me/analytics?from=&to=` | Per-day series and Health Score, balance, averages, % of targets, trends, AI Insights sentences, recommendation | Analytics, Food |
+| `POST /api/v1/me/coach/ask` | `{question_id}` or `{text}` → structured answer from the user's data; restricted topics get the safe answer | AI Coach |
+| `GET /api/v1/me/coach/history` | Saved questions and answers, oldest first | AI Coach |
 | `GET/POST /api/v1/me/meals`, `DELETE .../{id}` | POST one of `food_id`, `barcode` or `custom{...}`, plus `meal_time`, `servings` | Food, Scan Meal |
 | `GET/POST /api/v1/me/exercises`, `DELETE .../{id}` | `{activity_id, minutes}`; kcal = MET × weight × hours | Log Exercise |
 | `GET/POST /api/v1/me/stress` | `{level 1-10, factor_ids[]}`; response includes Low/Medium/High | Stress Check |
 | `POST /api/v1/me/water` | `{amount_ml}` (default 250) → day total | Home |
 | `PUT /api/v1/me/sleep/{date}` | `{hours}`; date = morning the night ended | Home |
 | `PUT /api/v1/me/steps/{date}` | `{steps}` from Health Connect / HealthKit | Home |
-| `GET /api/v1/foods?q=&category=&limit=&offset=` | Search Package 1 (name, English name, aliases) with labels | Scan Meal (Search) |
+| `GET /api/v1/foods?q=&category=&limit=&offset=&sort=popular` | Search Package 1 (name, English name, aliases) with labels; `sort=popular` = most logged | Scan Meal (Search) |
 | `GET /api/v1/foods/{id}` | One food with labels | |
 | `GET /api/v1/products/{barcode}` | Package 2 lookup | Scan Meal (Barcode) |
 | `GET /api/v1/activities?group=` | Package 3 with derived intensity | Log Exercise |
@@ -124,5 +131,14 @@ Column names follow the brief so the team's spreadsheets can be imported as-is. 
 | `reminder_texts` | `kind` | Profile has daily, bedtime and weekly-summary switches |
 | `insight_templates` | new table (7E) | Sentences for AI Insights with `{placeholders}` |
 
-Not implemented on purpose: the Health Score (its weights are open question 4 in the brief) and
-free-form AI Coach answers.
+Migration `0004_app_features.sql` adds what the screens need beyond the brief: `trigger_key` and English
+text for tips (so the API can pick a tip), `template_text_en`, `keywords` for restricted topics, the
+Profile settings columns on `users`, and `coach_chat_messages` for the AI Coach history.
+
+**Health Score is provisional.** Weights live in `app_defaults` (`health_weight_*`, equal for now) until
+experts decide (open question 4 in the brief). Each part is 0-100: nutrition (protein, fibre, calories vs
+target), sleep (inside the recommended range), stress (10 = 0 points), exercise (steps vs target and
+minutes vs `exercise_minutes_target`). See `internal/api/insights.go`.
+
+The AI Coach is rule-based: answers are built from the user's last 7 days, the tip library and the
+sentence templates. There is no free-form AI model yet.

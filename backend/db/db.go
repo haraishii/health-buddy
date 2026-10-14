@@ -35,7 +35,7 @@ func Seed(ctx context.Context, pool *pgxpool.Pool) error {
 // where the public schema also carries grants and objects that Supabase itself manages.
 // Add new tables here when a migration creates them.
 var appTables = []string{
-	"meal_logs", "exercise_logs", "stress_logs", "water_logs", "sleep_logs", "step_logs", "users",
+	"coach_chat_messages", "meal_logs", "exercise_logs", "stress_logs", "water_logs", "sleep_logs", "step_logs", "users",
 	"foods", "packaged_products", "activities", "stress_questions", "stress_score_bands", "stress_factors",
 	"nutrition_targets", "sleep_recommendations", "daily_intake_limits", "activity_recommendations",
 	"app_defaults", "food_label_rules", "coach_tips", "coach_quick_questions", "coach_restricted_topics",

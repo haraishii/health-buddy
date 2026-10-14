@@ -26,15 +26,23 @@ type User struct {
 	LifeStage   string    `json:"life_stage"`
 	StepsTarget *int      `json:"steps_target"`
 	CreatedAt   time.Time `json:"created_at"`
+
+	// Profile > Settings.
+	ReminderDaily   bool   `json:"reminder_daily"`
+	ReminderBedtime bool   `json:"reminder_bedtime"`
+	BedtimeTime     string `json:"bedtime_time"` // HH:MM
+	WeeklySummary   bool   `json:"weekly_summary"`
+	Language        string `json:"language"`
 }
 
-const userColumns = `id, email, name, status, birth_date, sex, height_cm, weight_kg, life_stage, steps_target, created_at`
+const userColumns = `id, email, name, status, birth_date, sex, height_cm, weight_kg, life_stage, steps_target, created_at,
+	reminder_daily, reminder_bedtime, to_char(bedtime_time, 'HH24:MI'), weekly_summary, language`
 
 func scanUser(row pgx.Row) (User, error) {
 	var u User
 	var birth *time.Time
 	err := row.Scan(&u.ID, &u.Email, &u.Name, &u.Status, &birth, &u.Sex, &u.HeightCm, &u.WeightKg, &u.LifeStage,
-		&u.StepsTarget, &u.CreatedAt)
+		&u.StepsTarget, &u.CreatedAt, &u.ReminderDaily, &u.ReminderBedtime, &u.BedtimeTime, &u.WeeklySummary, &u.Language)
 	if birth != nil {
 		s := birth.Format(dateLayout)
 		u.BirthDate = &s
@@ -170,9 +178,24 @@ func (s *Server) updateMe(w http.ResponseWriter, r *http.Request, userID int64) 
 		WeightKg    *float64 `json:"weight_kg"`
 		LifeStage   *string  `json:"life_stage"`
 		StepsTarget *int     `json:"steps_target"`
+
+		ReminderDaily   *bool   `json:"reminder_daily"`
+		ReminderBedtime *bool   `json:"reminder_bedtime"`
+		BedtimeTime     *string `json:"bedtime_time"`
+		WeeklySummary   *bool   `json:"weekly_summary"`
+		Language        *string `json:"language"`
+
+		// steps_target cannot be cleared with null in a COALESCE update, so this flag does it.
+		ClearStepsTarget bool `json:"clear_steps_target"`
 	}
 	if !decode(w, r, &in) {
 		return
+	}
+	if in.BedtimeTime != nil {
+		if _, err := time.Parse("15:04", *in.BedtimeTime); err != nil {
+			writeError(w, http.StatusBadRequest, "bedtime_time must be HH:MM")
+			return
+		}
 	}
 
 	var birth *time.Time
@@ -198,15 +221,21 @@ func (s *Server) updateMe(w http.ResponseWriter, r *http.Request, userID int64) 
 			height_cm = COALESCE($6, height_cm),
 			weight_kg = COALESCE($7, weight_kg),
 			life_stage = COALESCE($8, life_stage),
-			steps_target = COALESCE($9, steps_target),
+			steps_target = CASE WHEN $10::bool THEN NULL ELSE COALESCE($9, steps_target) END,
+			reminder_daily = COALESCE($11, reminder_daily),
+			reminder_bedtime = COALESCE($12, reminder_bedtime),
+			bedtime_time = COALESCE($13::text::time, bedtime_time),
+			weekly_summary = COALESCE($14, weekly_summary),
+			language = COALESCE($15, language),
 			updated_at = now()
 		WHERE id = $1
 		RETURNING `+userColumns,
-		userID, in.Name, in.Status, birth, in.Sex, in.HeightCm, in.WeightKg, in.LifeStage, in.StepsTarget))
+		userID, in.Name, in.Status, birth, in.Sex, in.HeightCm, in.WeightKg, in.LifeStage, in.StepsTarget,
+		in.ClearStepsTarget, in.ReminderDaily, in.ReminderBedtime, in.BedtimeTime, in.WeeklySummary, in.Language))
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == "23514" {
 		writeError(w, http.StatusBadRequest,
-			"invalid value: sex is M or F, life_stage needs sex F, height 50-250 cm, weight 20-300 kg")
+			"invalid value: sex is M or F, life_stage needs sex F, height 50-250 cm, weight 20-300 kg, language en or id")
 		return
 	}
 	if err != nil {

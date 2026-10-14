@@ -60,7 +60,8 @@ func (f *Food) nutrients() nutrientValues {
 	}}
 }
 
-// searchFoods: GET /api/v1/foods?q=nasi&category=staple&limit=20&offset=0
+// searchFoods: GET /api/v1/foods?q=nasi&category=staple&limit=20&offset=0&sort=popular
+// sort=popular puts the foods logged most often by all users first (the "Popular" list in Scan Meal).
 func (s *Server) searchFoods(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	limit, offset := 20, 0
@@ -78,8 +79,9 @@ func (s *Server) searchFoods(w http.ResponseWriter, r *http.Request) {
 		WHERE ($1 = '' OR name ILIKE '%' || $1 || '%' OR name_en ILIKE '%' || $1 || '%'
 		       OR EXISTS (SELECT 1 FROM unnest(aliases) AS a WHERE a ILIKE '%' || $1 || '%'))
 		  AND ($2 = '' OR category = $2)
-		ORDER BY (name ILIKE $1 || '%') DESC, name
-		LIMIT $3 OFFSET $4`, term, q.Get("category"), limit, offset)
+		ORDER BY CASE WHEN $5 THEN (SELECT count(*) FROM meal_logs m WHERE m.food_id = foods.id) END DESC NULLS LAST,
+		         (name ILIKE $1 || '%') DESC, name
+		LIMIT $3 OFFSET $4`, term, q.Get("category"), limit, offset, q.Get("sort") == "popular")
 	if err != nil {
 		serverError(w, err)
 		return
@@ -252,7 +254,9 @@ type coachTip struct {
 	ID               string  `db:"id" json:"id"`
 	Topic            string  `db:"topic" json:"topic"`
 	TriggerCondition string  `db:"trigger_condition" json:"trigger_condition"`
+	TriggerKey       *string `db:"trigger_key" json:"trigger_key"`
 	TipText          string  `db:"tip_text" json:"tip_text"`
+	TipTextEn        *string `db:"tip_text_en" json:"tip_text_en"`
 	Source           string  `db:"source" json:"source"`
 	ReviewedBy       *string `db:"reviewed_by" json:"reviewed_by"`
 }
@@ -270,6 +274,7 @@ type restrictedTopic struct {
 	Topic            string   `db:"topic" json:"topic"`
 	ExampleQuestions []string `db:"example_questions" json:"example_questions"`
 	SafeAnswer       string   `db:"safe_answer" json:"safe_answer"`
+	SafeAnswerEn     *string  `db:"safe_answer_en" json:"safe_answer_en"`
 	SupportReferral  string   `db:"support_referral" json:"support_referral"`
 }
 
@@ -281,10 +286,11 @@ type reminderText struct {
 }
 
 type insightTemplate struct {
-	ID           string `db:"id" json:"id"`
-	Topic        string `db:"topic" json:"topic"`
-	TriggerKey   string `db:"trigger_key" json:"trigger_key"`
-	TemplateText string `db:"template_text" json:"template_text"`
+	ID             string  `db:"id" json:"id"`
+	Topic          string  `db:"topic" json:"topic"`
+	TriggerKey     string  `db:"trigger_key" json:"trigger_key"`
+	TemplateText   string  `db:"template_text" json:"template_text"`
+	TemplateTextEn *string `db:"template_text_en" json:"template_text_en"`
 }
 
 // coachContent: GET /api/v1/coach/content returns all of Package 7 in one call (it is small).
@@ -300,7 +306,8 @@ func (s *Server) coachContent(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 	if out.Tips, err = queryAll[coachTip](ctx, s.db,
-		`SELECT id, topic, trigger_condition, tip_text, source, reviewed_by FROM coach_tips ORDER BY id`); err != nil {
+		`SELECT id, topic, trigger_condition, trigger_key, tip_text, tip_text_en, source, reviewed_by
+		FROM coach_tips ORDER BY id`); err != nil {
 		serverError(w, err)
 		return
 	}
@@ -310,7 +317,7 @@ func (s *Server) coachContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if out.RestrictedTopics, err = queryAll[restrictedTopic](ctx, s.db, `SELECT id, topic, example_questions,
-		safe_answer, support_referral FROM coach_restricted_topics ORDER BY id`); err != nil {
+		safe_answer, safe_answer_en, support_referral FROM coach_restricted_topics ORDER BY id`); err != nil {
 		serverError(w, err)
 		return
 	}
@@ -320,7 +327,7 @@ func (s *Server) coachContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out.InsightTemplates, err = queryAll[insightTemplate](ctx, s.db,
-		`SELECT id, topic, trigger_key, template_text FROM insight_templates ORDER BY id`)
+		`SELECT id, topic, trigger_key, template_text, template_text_en FROM insight_templates ORDER BY id`)
 	if err != nil {
 		serverError(w, err)
 		return

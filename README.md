@@ -2,7 +2,7 @@
 
 A wellness app for students: Health Score, weekly analytics, an AI Coach, and logs for food, stress and exercise.
 
-> **Status: 8-screen prototype, hardcoded version (October 2026).** Home, Analytics, AI Coach, Food, Profile, Scan Meal, Stress Check and Log Exercise are all clickable. All data is sample data. Some numbers are still written directly inside the screens; moving them into `lib/data/dummy_data.dart` is part of the team's work. There is no login, backend or real AI yet.
+> **Status: connected to the Go backend (October 2026).** Every screen reads its data from the API in `backend/` (sign in, Home, Analytics, AI Coach, Food, Scan Meal, Stress Check, Log Exercise, Profile). The backend's reference data is still DUMMY until the team delivers the data packages. Photo recognition and camera barcode scanning are not built yet.
 
 ## Running the app
 
@@ -12,7 +12,9 @@ Requirements: [Flutter SDK](https://docs.flutter.dev/get-started/install), stabl
 git clone https://github.com/<org>/health-buddy.git
 cd health-buddy
 flutter pub get
-flutter run -d chrome        # or pick a phone/emulator
+flutter run -d chrome        # or pick a phone/emulator; needs the backend running (see backend/README.md)
+# Another API address: flutter run --dart-define=API_URL=http://10.0.2.2:8080
+# Backend on Render: see backend/DEPLOY_RENDER.md
 ```
 
 The `android/`, `ios/` and `web/` folders are already in the repo, so you do **not** need to run `flutter create`.
