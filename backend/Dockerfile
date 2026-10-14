@@ -9,3 +9,5 @@ FROM gcr.io/distroless/static-debian12:nonroot
 COPY --from=build /out/api /api
 EXPOSE 8080
 ENTRYPOINT ["/api"]
+# Apply pending migrations on every start (a no-op when there are none). docker-compose overrides this with -seed.
+CMD ["-migrate"]

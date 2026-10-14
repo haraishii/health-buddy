@@ -1,0 +1,21 @@
+# Render Blueprint for the Go API in backend/. The Flutter app is not deployed here.
+# Render > New > Blueprint > pick this repo. Secrets marked sync: false are asked for in the dashboard.
+services:
+  - type: web
+    name: health-buddy-api
+    runtime: docker
+    rootDir: backend          # only changes under backend/ trigger a deploy
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    region: singapore         # same region as the Supabase project
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATABASE_URL     # Supabase Session pooler URL (port 5432, sslmode=require)
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TOKEN_TTL
+        value: 72h
+      - key: CORS_ORIGIN
+        value: "*"
