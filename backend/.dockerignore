@@ -1,0 +1,5 @@
+# Keep secrets and local files out of the image build context.
+.env
+*.env
+docker-compose.yml
+README.md
