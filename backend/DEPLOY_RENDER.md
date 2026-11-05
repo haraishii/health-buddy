@@ -76,6 +76,8 @@ Yang sudah diatur otomatis oleh `render.yaml`:
 | `JWT_SECRET` | dibuat acak oleh Render | Kunci untuk token login. |
 | `SEED_DUMMY_DATA` | `true` | Mengisi data dummy dan 3 akun uji (sekali saja). |
 | `ALLOW_DRAFT_LABEL_RULES` | `true` | Label Healthy/High fat memakai aturan draf yang belum disetujui ahli gizi. |
+| `OLLAMA_API_KEY` | diisi sendiri (lihat "Mengaktifkan AI Coach") | Kunci Ollama Cloud. Kosong = AI Coach memakai jawaban berbasis aturan. |
+| `OLLAMA_MODEL` | `gpt-oss:120b` | Model AI untuk AI Coach. |
 
 Kalau ingin membuat service tanpa Blueprint: **New → Web Service** → pilih repo → **Language: Docker**,
 **Root Directory: `backend`**, **Health Check Path: `/healthz`**, lalu isi environment variables seperti tabel
@@ -159,6 +161,31 @@ tombol cepat untuk mengisi akun uji.
 - **Jangan mengubah file migrasi yang sudah pernah dijalankan.** Buat file baru untuk setiap perubahan.
 - Setiap tabel baru harus diberi `ALTER TABLE nama_tabel ENABLE ROW LEVEL SECURITY;` di migrasinya.
 
+## Mengaktifkan AI Coach (Ollama Cloud)
+
+AI Coach menjawab pertanyaan bebas dengan model `gpt-oss:120b` di Ollama Cloud, berdasarkan data 7 hari
+pengguna. Kuncinya hanya disimpan di backend, jadi APK yang sudah terpasang langsung ikut memakai AI setelah
+backend di-deploy ulang; tidak perlu build APK baru.
+
+1. Login ke [ollama.com](https://ollama.com) dengan akun yang akan menanggung pemakaian AI, lalu buat kunci
+   di [ollama.com/settings/keys](https://ollama.com/settings/keys). Akun ditentukan oleh kunci ini, bukan oleh
+   login `ollama` di komputer Anda.
+2. (Opsional) Uji kuncinya dari komputer: isi `OLLAMA_API_KEY=` di `backend/.env`, lalu jalankan
+   `bash scripts/check_ollama.sh` dari folder `backend/`. Harus muncul `HTTP 200` dan sebuah jawaban.
+3. Di Render → service `health-buddy-api` → **Environment** → **Add Environment Variable**:
+   `OLLAMA_API_KEY` = kunci Anda. Simpan; Render akan deploy ulang.
+4. Cek log Render: harus ada `AI coach: gpt-oss:120b via https://ollama.com`.
+
+Catatan:
+
+- Topik sensitif (misalnya menyakiti diri, obat) tetap dijawab dengan jawaban aman yang sudah ditinjau,
+  tidak dikirim ke model AI.
+- Kalau model gagal atau lebih lambat dari `OLLAMA_TIMEOUT` (default `12s`), AI Coach otomatis memakai
+  jawaban berbasis aturan, dan log Render memuat `ai coach: ... using the rule-based answer`.
+- Yang dikirim ke Ollama: pertanyaan, maksimal 6 pesan chat dari 24 jam terakhir, profil (umur, jenis kelamin,
+  tinggi, berat), target harian, dan ringkasan data 7 hari. Nama dan email tidak dikirim.
+- Untuk mematikan AI, hapus `OLLAMA_API_KEY` di Render.
+
 ## Sebelum dipakai pengguna sungguhan
 
 1. Ganti data DUMMY dengan data dari paket data tim (makanan, aktivitas, AKG, tips, dan lainnya).
@@ -181,6 +208,7 @@ tombol cepat untuk mengisi akun uji.
 | `/healthz` membalas `database unavailable` | Project Supabase sedang di-pause (paket Free di-pause setelah 1 minggu tidak dipakai). Buka dashboard Supabase dan klik **Restore project**. |
 | Deploy tidak berjalan setelah push | Perubahannya di luar folder `backend/` (memang tidak memicu deploy), atau Render memantau branch lain (**Settings → Branch**). |
 | Login gagal "Email or password is incorrect" untuk akun uji | Seed belum jalan. Pastikan `SEED_DUMMY_DATA=true` dan log memuat `applied seeds/0002_test_users.sql`. |
+| AI Coach menjawab dengan poin-poin seperti dulu, bukan jawaban AI | Log `AI coach: rule-based only`: `OLLAMA_API_KEY` belum diisi. Log `ai coach: ollama: 401 Unauthorized`: kuncinya salah atau sudah dihapus; buat kunci baru. Log `402 Payment Required: Add usage credits or subscribe`: kuncinya benar, tetapi akun Ollama belum punya kredit/paket; isi di [ollama.com/plans](https://ollama.com/plans). Log `context deadline exceeded`: model lambat; coba lagi atau naikkan `OLLAMA_TIMEOUT` (maksimal ±15s, karena aplikasi menyerah setelah 20 detik). |
 
 **Memperbaiki `relation ... already exists`.** Backend mencatat file yang sudah dijalankan di tabel
 `schema_migrations` dan `seed_runs`. Bila tabel sudah ada tetapi catatannya kosong, tandai file yang memang

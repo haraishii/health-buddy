@@ -42,6 +42,22 @@ go test ./...
 Each SQL file runs once and is recorded in `schema_migrations` / `seed_runs`. To change the schema,
 add a new file (`0003_...sql`); never edit a file that has already been applied.
 
+### AI Coach model (Ollama)
+
+`POST /api/v1/me/coach/ask` sends free questions to an Ollama chat model when one is configured, with the
+user's last 7 days, the rule-based facts and reviewed tips as context. Restricted topics still get the
+reviewed safe answer and never reach the model. If the model fails or is slower than `OLLAMA_TIMEOUT`, the
+rule-based answer is returned instead. AI answers carry `"model"` in the reply payload.
+
+| Env | Default | |
+|---|---|---|
+| `OLLAMA_API_KEY` | empty (AI off) | Key from ollama.com/settings/keys. Server only, never in the app. |
+| `OLLAMA_MODEL` | `gpt-oss:120b` | Any model from `https://ollama.com/api/tags` |
+| `OLLAMA_TIMEOUT` | `12s` | Keep it under the app's 20 s request timeout |
+| `OLLAMA_BASE_URL` | `https://ollama.com` | `http://localhost:11434` uses a local `ollama serve` without a key (model e.g. `gpt-oss:120b-cloud`) |
+
+Check a key with `bash scripts/check_ollama.sh` (reads `backend/.env`).
+
 ### Using Supabase as the database
 
 1. Create a project in a region close to your users and server (e.g. Singapore for Indonesia).

@@ -25,3 +25,9 @@ services:
         value: "true"
       - key: ALLOW_DRAFT_LABEL_RULES
         value: "true"
+      # AI Coach: key from ollama.com/settings/keys, entered in the Render dashboard (never committed).
+      # Without it the coach stays rule-based.
+      - key: OLLAMA_API_KEY
+        sync: false
+      - key: OLLAMA_MODEL
+        value: gpt-oss:120b

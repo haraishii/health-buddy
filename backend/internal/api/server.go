@@ -15,16 +15,22 @@ import (
 
 	"github.com/iwinardhyas/health-buddy/backend/internal/auth"
 	"github.com/iwinardhyas/health-buddy/backend/internal/config"
+	"github.com/iwinardhyas/health-buddy/backend/internal/ollama"
 )
 
 type Server struct {
 	db     *pgxpool.Pool
 	tokens *auth.Tokens
 	cfg    config.Config
+	ai     *ollama.Client // nil: the AI Coach answers from its rules only
 }
 
 func NewServer(db *pgxpool.Pool, cfg config.Config) *Server {
-	return &Server{db: db, tokens: auth.NewTokens(cfg.JWTSecret, cfg.TokenTTL), cfg: cfg}
+	s := &Server{db: db, tokens: auth.NewTokens(cfg.JWTSecret, cfg.TokenTTL), cfg: cfg}
+	if cfg.OllamaEnabled {
+		s.ai = ollama.New(cfg.OllamaBaseURL, cfg.OllamaAPIKey, cfg.OllamaModel)
+	}
+	return s
 }
 
 func (s *Server) Routes() http.Handler {
