@@ -8,10 +8,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
-// Rule-based AI Coach: answers are built from the user's last 7 days, the tips (7A), the sentence templates
-// and the restricted topics (7C). No free-form AI model yet, so it never gives medical advice.
+// AI Coach. Restricted topics (7C) always get the reviewed safe answer. Other questions go to the AI model
+// (coach_ai.go) when one is configured, grounded in the user's last 7 days; without a model, or when it fails
+// or is too slow, the answer is built from the tips (7A) and sentence templates instead.
 
 type coachPoint struct {
 	Topic string `json:"topic"` // sleep, protein, stress, ... (the app picks an icon)
@@ -25,6 +27,7 @@ type coachReply struct {
 	RecommendationsTitle string       `json:"recommendations_title,omitempty"`
 	Recommendations      []string     `json:"recommendations"`
 	Referral             string       `json:"referral,omitempty"`
+	Model                string       `json:"model,omitempty"` // the AI model that wrote Text; empty for rule-based answers
 }
 
 type ChatMessage struct {
@@ -100,7 +103,13 @@ func (s *Server) askCoach(w http.ResponseWriter, r *http.Request, userID int64) 
 		if topic == "" {
 			topic = detectTopic(in.Text)
 		}
-		if reply, err = s.composeReply(ctx, p, topic); err != nil {
+		if s.ai != nil {
+			reply, err = s.aiReply(ctx, userID, p, topic, in.Text) // nil reply when the model failed
+		}
+		if reply == nil && err == nil {
+			reply, err = s.composeReply(ctx, p, topic)
+		}
+		if err != nil {
 			serverError(w, err)
 			return
 		}
@@ -288,11 +297,16 @@ func (r *coachReply) plainText() string {
 	if r.Referral != "" {
 		parts = append(parts, r.Referral)
 	}
-	text := strings.Join(parts, "\n")
-	if len(text) > 2000 {
-		text = text[:2000]
+	return truncateRunes(strings.Join(parts, "\n"), 2000) // the column allows 2000 characters
+}
+
+// truncateRunes cuts s to at most n characters without splitting a multi-byte character
+// (a cut UTF-8 sequence would make Postgres reject the insert).
+func truncateRunes(s string, n int) string {
+	if utf8.RuneCountInString(s) <= n {
+		return s
 	}
-	return text
+	return string([]rune(s)[:n])
 }
 
 // coachHistory: GET /api/v1/me/coach/history?limit=50 returns the latest messages, oldest first.

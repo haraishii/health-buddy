@@ -71,6 +71,11 @@ func main() {
 	if *noServe {
 		return
 	}
+	if cfg.OllamaEnabled {
+		log.Printf("AI coach: %s via %s", cfg.OllamaModel, cfg.OllamaBaseURL)
+	} else {
+		log.Print("AI coach: rule-based only (set OLLAMA_API_KEY to use an AI model)")
+	}
 
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,

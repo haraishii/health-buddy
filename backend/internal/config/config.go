@@ -18,6 +18,13 @@ type Config struct {
 	// AllowDraftLabelRules makes the API use food label rules that a nutritionist has not approved yet.
 	// Only for local testing with the dummy rules.
 	AllowDraftLabelRules bool
+
+	// AI Coach model on Ollama. Off (rule-based answers only) unless OLLAMA_API_KEY or OLLAMA_BASE_URL is set.
+	OllamaEnabled bool
+	OllamaBaseURL string // https://ollama.com (Ollama Cloud) or http://localhost:11434 (local, no key)
+	OllamaAPIKey  string // from ollama.com/settings/keys; never put it in the app
+	OllamaModel   string
+	OllamaTimeout time.Duration // past this the coach answers from its rules instead
 }
 
 func Load() (Config, error) {
@@ -41,6 +48,15 @@ func Load() (Config, error) {
 	c.TokenTTL = ttl
 
 	c.AllowDraftLabelRules, _ = strconv.ParseBool(os.Getenv("ALLOW_DRAFT_LABEL_RULES"))
+
+	c.OllamaAPIKey = os.Getenv("OLLAMA_API_KEY")
+	c.OllamaEnabled = c.OllamaAPIKey != "" || os.Getenv("OLLAMA_BASE_URL") != ""
+	c.OllamaBaseURL = getenv("OLLAMA_BASE_URL", "https://ollama.com")
+	c.OllamaModel = getenv("OLLAMA_MODEL", "gpt-oss:120b")
+	// The app gives up after 20 s, so the model must answer well before that.
+	if c.OllamaTimeout, err = time.ParseDuration(getenv("OLLAMA_TIMEOUT", "12s")); err != nil || c.OllamaTimeout <= 0 {
+		return c, errors.New("OLLAMA_TIMEOUT must be a duration such as 12s")
+	}
 	return c, nil
 }
 
