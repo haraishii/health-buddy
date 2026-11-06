@@ -1,16 +1,23 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:exif/exif.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../data/api/api_client.dart';
 import '../../../../data/api/api_models.dart';
 import '../../../../data/api/session.dart';
 import '../../../../theme.dart';
+import '../../../../widgets/animated.dart';
 import '../../../../widgets/api_builder.dart';
 import '../../../../widgets/common.dart';
 import '../../../../widgets/format.dart';
 import '../../../../widgets/skeleton.dart';
+import '../../meal_time.dart';
+import '../../photo_upload.dart';
+import 'photo_result_screen.dart';
 
 /// A food (Package 1) or packaged product (Package 2), per serving, ready to log.
 class _Item {
@@ -59,23 +66,18 @@ class _Item {
   final String? barcode;
 }
 
-const _mealTimes = [('breakfast', 'Breakfast'), ('lunch', 'Lunch'), ('dinner', 'Dinner'), ('snack', 'Snack')];
-
-/// Breakfast before 10, lunch before 15, snack before 18, then dinner (until 22).
-String _mealTimeNow() {
-  final h = DateTime.now().hour;
-  if (h < 10) return 'breakfast';
-  if (h < 15) return 'lunch';
-  if (h < 18) return 'snack';
-  if (h < 22) return 'dinner';
-  return 'snack';
-}
-
 class ScanMealScreen extends StatefulWidget {
-  const ScanMealScreen({super.key, this.mealTime});
+  const ScanMealScreen({super.key, this.mealTime, this.pickImage, this.preparePhoto});
 
   /// breakfast, lunch, dinner or snack; preselected in the add sheet.
   final String? mealTime;
+
+  /// Picks a photo; tests replace it. Defaults to [ImagePicker] shrunk to at most 1024 px.
+  final Future<XFile?> Function(ImageSource source)? pickImage;
+
+  /// Rotates, strips and shrinks the photo before upload; tests replace it.
+  /// Defaults to [preparePhotoForUpload] in a background isolate.
+  final Future<Uint8List> Function(Uint8List photo)? preparePhoto;
 
   @override
   State<ScanMealScreen> createState() => _ScanMealScreenState();
@@ -89,6 +91,13 @@ class _ScanMealScreenState extends State<ScanMealScreen> {
   String _query = '';
   bool _lookingUp = false;
   String? _barcodeError;
+
+  // Photo mode: the last photo is kept so "Try again" re-sends it without picking again.
+  Uint8List? _photo;
+  ImageSource? _photoSource;
+  DateTime? _photoTakenAt;
+  bool _analyzing = false;
+  String? _photoError;
 
   @override
   void dispose() {
@@ -128,13 +137,102 @@ class _ScanMealScreenState extends State<ScanMealScreen> {
     }
   }
 
+  Future<void> _pickPhoto(ImageSource source) async {
+    final pick =
+        widget.pickImage ??
+        (s) => ImagePicker().pickImage(source: s, maxWidth: 1024, maxHeight: 1024, imageQuality: 85);
+    final XFile? file;
+    try {
+      file = await pick(source);
+    } on PlatformException {
+      if (mounted) showToast(context, "Can't open the camera or gallery.", icon: Icons.error_outline_rounded);
+      return;
+    }
+    if (file == null || !mounted) return;
+    final Uint8List bytes;
+    try {
+      bytes = await file.readAsBytes();
+    } catch (_) {
+      if (mounted) showToast(context, "Can't read this photo. Try another one.", icon: Icons.error_outline_rounded);
+      return;
+    }
+    // Read the date first: preparing the photo removes its EXIF.
+    final takenAt = source == ImageSource.gallery ? await _exifDate(bytes) : null;
+    if (!mounted) return;
+    setState(() {
+      _analyzing = true;
+      _photoError = null;
+    });
+    final prepare = widget.preparePhoto ?? (b) => compute(preparePhotoForUpload, b);
+    Uint8List photo;
+    try {
+      photo = await prepare(bytes);
+    } catch (_) {
+      photo = bytes; // the server still accepts a JPEG/PNG as picked
+    }
+    if (!mounted) return;
+    setState(() {
+      _photo = photo;
+      _photoSource = source;
+      _photoTakenAt = takenAt ?? DateTime.now();
+    });
+    await _analyzePhoto();
+  }
+
+  /// When a gallery photo was taken, from its EXIF data; null when it has none.
+  static Future<DateTime?> _exifDate(Uint8List bytes) async {
+    try {
+      final tags = await readExifFromBytes(bytes);
+      return parseExifDate(tags['EXIF DateTimeOriginal']?.printable);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _analyzePhoto() async {
+    final photo = _photo;
+    if (photo == null) return;
+    final api = SessionScope.of(context).api;
+    setState(() {
+      _analyzing = true;
+      _photoError = null;
+    });
+    final PhotoAnalysis analysis;
+    try {
+      analysis = await api.analyzeMealPhoto(photo);
+    } catch (e) {
+      // Anything else (e.g. a captive-portal page instead of JSON) must also end the spinner.
+      if (mounted) {
+        setState(() {
+          _analyzing = false;
+          _photoError = e is ApiException ? e.message : 'Something went wrong while reading the photo. Try again.';
+        });
+      }
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _analyzing = false);
+    final result = await Navigator.of(context).push<Object?>(
+      slideRoute(PhotoResultScreen(image: photo, analysis: analysis, takenAt: _photoTakenAt ?? DateTime.now())),
+    );
+    if (!mounted) return;
+    if (result == PhotoResultExit.retake && _photoSource != null) {
+      await _pickPhoto(_photoSource!);
+    } else if (result is String) {
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.of(context).pop();
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(toastBar(result));
+    }
+  }
+
   Future<void> _showAddSheet(_Item item) async {
     final added = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
       backgroundColor: Colors.white,
       isScrollControlled: true,
-      builder: (sheetContext) => _AddSheet(item: item, mealTime: widget.mealTime ?? _mealTimeNow()),
+      builder: (sheetContext) => _AddSheet(item: item, mealTime: widget.mealTime ?? mealTimeAt(DateTime.now())),
     );
     if (added == null || !mounted) return;
     final messenger = ScaffoldMessenger.of(context);
@@ -143,7 +241,13 @@ class _ScanMealScreenState extends State<ScanMealScreen> {
     messenger.showSnackBar(toastBar(added));
   }
 
-  Widget _darkPanel({required double frameHeight, required String title, required String body}) {
+  Widget _darkPanel({
+    required double frameHeight,
+    required String title,
+    required String body,
+    Uint8List? background,
+    bool scanning = false,
+  }) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
       child: Container(
@@ -151,6 +255,8 @@ class _ScanMealScreenState extends State<ScanMealScreen> {
         child: Stack(
           fit: StackFit.expand,
           children: [
+            if (background != null) Opacity(opacity: 0.35, child: Image.memory(background, fit: BoxFit.cover)),
+            if (scanning) const ScanLine(),
             Center(
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 250),
@@ -217,31 +323,67 @@ class _ScanMealScreenState extends State<ScanMealScreen> {
               ),
               if (_mode == 0) ...[
                 Expanded(
-                  child: _darkPanel(
-                    frameHeight: 210,
-                    title: 'Photo recognition is coming soon',
-                    body: 'For now, search the food or type the barcode number.',
+                  child: _analyzing
+                      ? _darkPanel(
+                          frameHeight: 210,
+                          title: 'Analyzing your meal…',
+                          body: 'Finding each food, its weight and nutrients.',
+                          background: _photo,
+                          scanning: true,
+                        )
+                      : _photoError != null
+                      ? _darkPanel(
+                          frameHeight: 210,
+                          title: "Couldn't read this photo",
+                          body: _photoError!,
+                          background: _photo,
+                        )
+                      : _darkPanel(
+                          frameHeight: 210,
+                          title: 'Snap your plate',
+                          body: "We'll find each food, its weight and nutrients.",
+                        ),
+                ),
+                if (!_analyzing)
+                  Row(
+                    spacing: 10,
+                    children: _photoError != null
+                        ? [
+                            Expanded(
+                              child: OutlineChipButton(
+                                label: 'Try again',
+                                icon: Icons.refresh_rounded,
+                                onTap: _analyzePhoto,
+                              ),
+                            ),
+                            Expanded(
+                              child: OutlineChipButton(
+                                label: 'New photo',
+                                icon: Icons.add_a_photo_outlined,
+                                onTap: () => setState(() {
+                                  _photo = null;
+                                  _photoError = null;
+                                }),
+                              ),
+                            ),
+                          ]
+                        : [
+                            Expanded(
+                              child: OutlineChipButton(
+                                label: 'Take photo',
+                                icon: Icons.photo_camera_rounded,
+                                onTap: () => _pickPhoto(ImageSource.camera),
+                              ),
+                            ),
+                            Expanded(
+                              child: OutlineChipButton(
+                                label: 'Choose from gallery',
+                                icon: Icons.photo_library_rounded,
+                                onTap: () => _pickPhoto(ImageSource.gallery),
+                              ),
+                            ),
+                          ],
                   ),
-                ),
-                Row(
-                  spacing: 10,
-                  children: [
-                    Expanded(
-                      child: OutlineChipButton(
-                        label: 'Enter barcode',
-                        icon: Icons.qr_code_scanner_rounded,
-                        onTap: () => setState(() => _mode = 1),
-                      ),
-                    ),
-                    Expanded(
-                      child: OutlineChipButton(
-                        label: 'Search food',
-                        icon: Icons.search_rounded,
-                        onTap: () => setState(() => _mode = 2),
-                      ),
-                    ),
-                  ],
-                ),
               ] else if (_mode == 1) ...[
                 Expanded(
                   child: _darkPanel(
@@ -368,14 +510,14 @@ class _AddSheet extends StatefulWidget {
 }
 
 class _AddSheetState extends State<_AddSheet> {
-  late int _meal = _mealTimes.indexWhere((t) => t.$1 == widget.mealTime).clamp(0, 3);
+  late int _meal = mealTimes.indexWhere((t) => t.$1 == widget.mealTime).clamp(0, 3);
   double _servings = 1;
   bool _saving = false;
 
   Future<void> _add() async {
     setState(() => _saving = true);
     final item = widget.item;
-    final meal = _mealTimes[_meal];
+    final meal = mealTimes[_meal];
     final ok = await saveWithFeedback(
       context,
       (api) => api.addMeal(mealTime: meal.$1, foodId: item.foodId, barcode: item.barcode, servings: _servings),
@@ -468,7 +610,7 @@ class _AddSheetState extends State<_AddSheet> {
               ],
             ),
             Segmented(
-              options: [for (final t in _mealTimes) t.$2],
+              options: [for (final t in mealTimes) t.$2],
               index: _meal,
               onChanged: (i) => setState(() => _meal = i),
             ),
@@ -483,7 +625,7 @@ class _AddSheetState extends State<_AddSheet> {
                       child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
                     ),
                   )
-                : PrimaryButton(label: 'Add to ${_mealTimes[_meal].$2}', height: 52, onTap: _add),
+                : PrimaryButton(label: 'Add to ${mealTimes[_meal].$2}', height: 52, onTap: _add),
           ],
         ),
       ),

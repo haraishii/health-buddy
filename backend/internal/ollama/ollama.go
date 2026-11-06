@@ -14,8 +14,27 @@ import (
 )
 
 type Message struct {
-	Role    string `json:"role"` // system, user or assistant
-	Content string `json:"content"`
+	Role    string   `json:"role"` // system, user or assistant
+	Content string   `json:"content"`
+	Images  []string `json:"images,omitempty"` // base64 JPEG or PNG, for vision models
+}
+
+// Request is one chat call with its own generation settings.
+type Request struct {
+	Messages    []Message
+	Think       any // nil leaves it to the model; false, true or "low"/"medium"/"high"
+	Temperature float64
+	NumPredict  int // also counts hidden reasoning tokens
+}
+
+// StatusError is a non-200 answer from Ollama, e.g. 402 when a model is not in the account's plan.
+type StatusError struct {
+	StatusCode int
+	Message    string
+}
+
+func (e *StatusError) Error() string {
+	return fmt.Sprintf("ollama: %d %s: %s", e.StatusCode, http.StatusText(e.StatusCode), e.Message)
 }
 
 type Client struct {
@@ -44,18 +63,26 @@ type chatResponse struct {
 	Error      string  `json:"error"`
 }
 
-// Chat sends the conversation and returns the model's answer. The deadline comes from ctx.
+// Chat sends the conversation with the AI Coach settings and returns the model's answer.
+// The deadline comes from ctx.
 func (c *Client) Chat(ctx context.Context, messages []Message) (string, error) {
-	in := chatRequest{
-		Model:    c.Model,
-		Messages: messages,
-		Stream:   false,
-		// num_predict also counts the model's hidden reasoning, so it is well above the answer length.
-		Options: map[string]any{"temperature": 0.4, "num_predict": 800},
-	}
+	req := Request{Messages: messages, Temperature: 0.4, NumPredict: 800}
 	// gpt-oss always reasons; "low" keeps answers fast. Other models get no think field, since some reject it.
 	if strings.HasPrefix(c.Model, "gpt-oss") {
-		in.Think = "low"
+		req.Think = "low"
+	}
+	return c.ChatWith(ctx, req)
+}
+
+// ChatWith sends one request with its own settings and returns the model's answer.
+// A non-200 answer is a *StatusError.
+func (c *Client) ChatWith(ctx context.Context, r Request) (string, error) {
+	in := chatRequest{
+		Model:    c.Model,
+		Messages: r.Messages,
+		Stream:   false,
+		Think:    r.Think, // false is non-nil, so it is still sent
+		Options:  map[string]any{"temperature": r.Temperature, "num_predict": r.NumPredict},
 	}
 	body, err := json.Marshal(in)
 	if err != nil {
@@ -90,7 +117,7 @@ func (c *Client) Chat(ctx context.Context, messages []Message) (string, error) {
 				msg = msg[:200]
 			}
 		}
-		return "", fmt.Errorf("ollama: %s: %s", resp.Status, msg)
+		return "", &StatusError{StatusCode: resp.StatusCode, Message: msg}
 	}
 	if jsonErr != nil {
 		return "", fmt.Errorf("ollama: decode response: %w", jsonErr)

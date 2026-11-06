@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'api_client.dart';
 import 'api_models.dart';
 
@@ -121,6 +123,27 @@ class HealthBuddyApi {
   );
 
   Future<void> deleteMeal(int id) => client.delete('$_v1/me/meals/$id');
+
+  /// Scan Meal photo (a JPEG, at most 1024 px): the AI lists each food with its weight and nutrients.
+  /// Saves nothing. Allowed 45 s, since the model can take a while.
+  Future<PhotoAnalysis> analyzeMealPhoto(List<int> jpeg) async => PhotoAnalysis.fromJson(
+    await client.post('$_v1/me/meals/photo', {'image': base64Encode(jpeg)}, const Duration(seconds: 45))
+        as Map<String, dynamic>,
+  );
+
+  /// Logs the reviewed photo items in one go: all are saved or none.
+  Future<List<MealLog>> addMealsBatch({
+    required String mealTime,
+    required List<PhotoItem> items,
+    DateTime? date,
+  }) async {
+    final json = await client.post('$_v1/me/meals/batch', {
+      'date': _day(date),
+      'meal_time': mealTime,
+      'items': [for (final i in items) i.toBatchJson()],
+    }) as Map<String, dynamic>;
+    return [for (final m in json['items'] as List) MealLog.fromJson(m as Map<String, dynamic>)];
+  }
 
   // --- exercise, stress, water, sleep, steps ---
 

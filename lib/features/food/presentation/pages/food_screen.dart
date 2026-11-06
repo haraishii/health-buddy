@@ -334,9 +334,10 @@ class _MealCard extends StatelessWidget {
   final List<MealLog> items;
   final ValueChanged<MealLog> onDelete;
 
+  /// Photo items show their weight; others show servings when not 1.
   static String _macros(MealLog m) =>
       'P ${fmtNum(m.proteinG)} g · C ${fmtNum(m.carbsG)} g · F ${fmtNum(m.fatG)} g'
-      '${m.servings == 1 ? '' : ' · ${fmtNum(m.servings, decimals: 1)}×'}';
+      '${m.grams != null ? ' · ${fmtNum(m.grams!)} g' : (m.servings == 1 ? '' : ' · ${fmtNum(m.servings, decimals: 1)}×')}';
 
   @override
   Widget build(BuildContext context) {

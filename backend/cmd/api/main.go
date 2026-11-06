@@ -73,6 +73,7 @@ func main() {
 	}
 	if cfg.OllamaEnabled {
 		log.Printf("AI coach: %s via %s", cfg.OllamaModel, cfg.OllamaBaseURL)
+		log.Printf("photo meals: %s via %s", cfg.OllamaVisionModel, cfg.OllamaBaseURL)
 	} else {
 		log.Print("AI coach: rule-based only (set OLLAMA_API_KEY to use an AI model)")
 	}

@@ -39,12 +39,21 @@ class ApiClient {
   void Function()? onUnauthorized;
 
   Future<dynamic> get(String path, {Map<String, String?>? query}) => _send('GET', path, query: query);
-  Future<dynamic> post(String path, [Object? body]) => _send('POST', path, body: body ?? const {});
+
+  /// [timeout] replaces the default for this one request, e.g. a photo the AI needs longer to read.
+  Future<dynamic> post(String path, [Object? body, Duration? timeout]) =>
+      _send('POST', path, body: body ?? const {}, timeout: timeout);
   Future<dynamic> put(String path, Object body) => _send('PUT', path, body: body);
   Future<dynamic> patch(String path, Object body) => _send('PATCH', path, body: body);
   Future<dynamic> delete(String path) => _send('DELETE', path);
 
-  Future<dynamic> _send(String method, String path, {Map<String, String?>? query, Object? body}) async {
+  Future<dynamic> _send(
+    String method,
+    String path, {
+    Map<String, String?>? query,
+    Object? body,
+    Duration? timeout,
+  }) async {
     final params = {
       for (final e in (query ?? const <String, String?>{}).entries)
         if (e.value != null && e.value!.isNotEmpty) e.key: e.value!,
@@ -58,7 +67,7 @@ class ApiClient {
 
     final http.Response response;
     try {
-      response = await http.Response.fromStream(await _http.send(request).timeout(timeout));
+      response = await http.Response.fromStream(await _http.send(request).timeout(timeout ?? this.timeout));
     } on TimeoutException {
       throw const ApiException(0, 'The server took too long to respond. Please try again.');
     } on http.ClientException {
