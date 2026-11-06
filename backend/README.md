@@ -54,6 +54,8 @@ rule-based answer is returned instead. AI answers carry `"model"` in the reply p
 | `OLLAMA_API_KEY` | empty (AI off) | Key from ollama.com/settings/keys. Server only, never in the app. |
 | `OLLAMA_MODEL` | `gpt-oss:120b` | Any model from `https://ollama.com/api/tags` |
 | `OLLAMA_TIMEOUT` | `12s` | Keep it under the app's 20 s request timeout |
+| `OLLAMA_VISION_MODEL` | `gemma4:31b` | Scan Meal photos (`POST /me/meals/photo`); the only vision model in the free plan |
+| `OLLAMA_VISION_TIMEOUT` | `30s` | Photo analysis limit; the app waits 45 s for this request |
 | `OLLAMA_BASE_URL` | `https://ollama.com` | `http://localhost:11434` uses a local `ollama serve` without a key (model e.g. `gpt-oss:120b-cloud`) |
 
 Check a key with `bash scripts/check_ollama.sh` (reads `backend/.env`).

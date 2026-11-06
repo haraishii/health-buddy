@@ -23,12 +23,14 @@ type Server struct {
 	tokens *auth.Tokens
 	cfg    config.Config
 	ai     *ollama.Client // nil: the AI Coach answers from its rules only
+	vision *ollama.Client // nil: Scan Meal photos are not available
 }
 
 func NewServer(db *pgxpool.Pool, cfg config.Config) *Server {
 	s := &Server{db: db, tokens: auth.NewTokens(cfg.JWTSecret, cfg.TokenTTL), cfg: cfg}
 	if cfg.OllamaEnabled {
 		s.ai = ollama.New(cfg.OllamaBaseURL, cfg.OllamaAPIKey, cfg.OllamaModel)
+		s.vision = ollama.New(cfg.OllamaBaseURL, cfg.OllamaAPIKey, cfg.OllamaVisionModel)
 	}
 	return s
 }
@@ -58,6 +60,8 @@ func (s *Server) Routes() http.Handler {
 
 	mux.Handle("GET /api/v1/me/meals", user(s.listMeals))
 	mux.Handle("POST /api/v1/me/meals", user(s.createMeal))
+	mux.Handle("POST /api/v1/me/meals/photo", user(s.analyzeMealPhoto))
+	mux.Handle("POST /api/v1/me/meals/batch", user(s.createMealsBatch))
 	mux.Handle("DELETE /api/v1/me/meals/{id}", user(s.deleteMeal))
 	mux.Handle("GET /api/v1/me/exercises", user(s.listExercises))
 	mux.Handle("POST /api/v1/me/exercises", user(s.createExercise))
@@ -123,6 +127,9 @@ func (r *statusRecorder) WriteHeader(code int) {
 	r.ResponseWriter.WriteHeader(code)
 }
 
+// Unwrap lets http.ResponseController reach the real writer, e.g. to extend the write deadline for a photo.
+func (r *statusRecorder) Unwrap() http.ResponseWriter { return r.ResponseWriter }
+
 func (s *Server) logRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
@@ -166,7 +173,12 @@ func serverError(w http.ResponseWriter, err error) {
 
 // decode reads a JSON body of at most 1 MB and rejects unknown fields.
 func decode(w http.ResponseWriter, r *http.Request, dst any) bool {
-	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20))
+	return decodeLimit(w, r, dst, 1<<20)
+}
+
+// decodeLimit is decode with a custom body size limit in bytes, e.g. for a photo upload.
+func decodeLimit(w http.ResponseWriter, r *http.Request, dst any, limit int64) bool {
+	dec := json.NewDecoder(http.MaxBytesReader(w, r.Body, limit))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(dst); err != nil {
 		if errors.Is(err, io.EOF) {

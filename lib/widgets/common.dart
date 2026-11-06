@@ -460,19 +460,25 @@ class PrimaryButton extends StatelessWidget {
   });
 
   final String label;
-  final VoidCallback onTap;
+
+  /// Null shows the button greyed out and disabled.
+  final VoidCallback? onTap;
   final Color color;
   final double height;
 
   @override
   Widget build(BuildContext context) {
+    final enabled = onTap != null;
     return PressScale(
       onTap: onTap,
       child: Container(
         height: height,
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(16)),
-        child: Text(label, style: ts(16, FontWeight.w700, Colors.white)),
+        decoration: BoxDecoration(
+          color: enabled ? color : AppColors.borderStrong,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(label, style: ts(16, FontWeight.w700, enabled ? Colors.white : AppColors.muted)),
       ),
     );
   }

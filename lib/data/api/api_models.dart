@@ -554,6 +554,7 @@ class MealLog {
     required this.labels,
     this.foodId,
     this.barcode,
+    this.grams,
   });
 
   factory MealLog.fromJson(Map<String, dynamic> j) => MealLog(
@@ -565,6 +566,7 @@ class MealLog {
     name: j['name'] as String,
     category: j['category'] as String,
     servings: _d(j['servings']),
+    grams: _dn(j['grams']),
     caloriesKcal: _d(j['calories_kcal']),
     proteinG: _d(j['protein_g']),
     carbsG: _d(j['carbs_g']),
@@ -584,6 +586,9 @@ class MealLog {
   /// Package 1 category, 'packaged' (barcode) or 'custom'.
   final String category;
   final double servings;
+
+  /// Weight in grams; set for items logged from a Scan Meal photo.
+  final double? grams;
   final double caloriesKcal;
   final double proteinG;
   final double carbsG;
@@ -591,6 +596,149 @@ class MealLog {
 
   /// e.g. Healthy, High fat (from the approved label rules).
   final List<String> labels;
+}
+
+/// Where a food is in a Scan Meal photo, from 0 to 1000 of the photo's width (x) and height (y).
+class PhotoBox {
+  const PhotoBox({required this.xMin, required this.yMin, required this.xMax, required this.yMax});
+
+  factory PhotoBox.fromJson(Map<String, dynamic> j) =>
+      PhotoBox(xMin: _d(j['x_min']), yMin: _d(j['y_min']), xMax: _d(j['x_max']), yMax: _d(j['y_max']));
+
+  final double xMin;
+  final double yMin;
+  final double xMax;
+  final double yMax;
+}
+
+/// One food found in a Scan Meal photo (or added by hand on the result screen). Nutrients are for [grams].
+class PhotoItem {
+  const PhotoItem({
+    required this.name,
+    required this.grams,
+    required this.caloriesKcal,
+    required this.proteinG,
+    required this.carbsG,
+    required this.fatG,
+    required this.fiberG,
+    required this.source,
+    this.nameEn,
+    this.confidence = 1,
+    this.box,
+    this.foodId,
+    this.servingGrams,
+  });
+
+  factory PhotoItem.fromJson(Map<String, dynamic> j) => PhotoItem(
+    name: j['name'] as String,
+    nameEn: j['name_en'] as String?,
+    grams: _d(j['grams']),
+    caloriesKcal: _d(j['calories_kcal']),
+    proteinG: _d(j['protein_g']),
+    carbsG: _d(j['carbs_g']),
+    fatG: _d(j['fat_g']),
+    fiberG: _d(j['fiber_g']),
+    confidence: _d(j['confidence']),
+    box: j['box'] == null ? null : PhotoBox.fromJson(j['box'] as Map<String, dynamic>),
+    source: j['source'] as String,
+    foodId: j['food_id'] as String?,
+    servingGrams: _dn(j['serving_grams']),
+  );
+
+  /// A database food at [grams], e.g. from "Add manually" or "Change food".
+  factory PhotoItem.fromFood(Food f, {required double grams, PhotoBox? box}) {
+    final per = grams / f.servingGrams;
+    return PhotoItem(
+      name: f.name,
+      nameEn: f.nameEn,
+      grams: grams,
+      caloriesKcal: f.caloriesKcal * per,
+      proteinG: f.proteinG * per,
+      carbsG: f.carbsG * per,
+      fatG: f.fatG * per,
+      fiberG: f.fiberG * per,
+      source: 'database',
+      box: box,
+      foodId: f.id,
+      servingGrams: f.servingGrams,
+    );
+  }
+
+  static const minGrams = 5.0;
+  static const maxGrams = 2000.0;
+
+  final String name;
+  final String? nameEn;
+  final double grams;
+  final double caloriesKcal;
+  final double proteinG;
+  final double carbsG;
+  final double fatG;
+  final double fiberG;
+
+  /// How sure the AI is, 0 to 1.
+  final double confidence;
+  final PhotoBox? box;
+
+  /// database (nutrients from the foods table) or ai (the model's estimate).
+  final String source;
+  final String? foodId;
+  final double? servingGrams;
+
+  bool get fromDatabase => source == 'database';
+
+  /// The same food at another weight (5 to 2000 g); nutrients scale with it.
+  PhotoItem withGrams(double g) {
+    final next = g.clamp(minGrams, maxGrams).toDouble();
+    final f = grams > 0 ? next / grams : 0.0;
+    return PhotoItem(
+      name: name,
+      nameEn: nameEn,
+      grams: next,
+      caloriesKcal: caloriesKcal * f,
+      proteinG: proteinG * f,
+      carbsG: carbsG * f,
+      fatG: fatG * f,
+      fiberG: fiberG * f,
+      confidence: confidence,
+      box: box,
+      source: source,
+      foodId: foodId,
+      servingGrams: servingGrams,
+    );
+  }
+
+  /// One entry of POST /me/meals/batch.
+  Map<String, dynamic> toBatchJson() => foodId != null && fromDatabase
+      ? {'food_id': foodId, 'grams': grams}
+      : {
+          'custom': {
+            'name': name,
+            'calories_kcal': caloriesKcal,
+            'protein_g': proteinG,
+            'carbs_g': carbsG,
+            'fat_g': fatG,
+            'fiber_g': fiberG,
+          },
+          'grams': grams,
+        };
+}
+
+/// POST /me/meals/photo: what the AI found in a photo. Nothing is saved yet.
+class PhotoAnalysis {
+  const PhotoAnalysis({required this.model, required this.items, required this.unrecognized});
+
+  factory PhotoAnalysis.fromJson(Map<String, dynamic> j) => PhotoAnalysis(
+    model: j['model'] as String? ?? '',
+    items: _list(j['items'], PhotoItem.fromJson),
+    unrecognized: _strings(j['unrecognized']),
+  );
+
+  final String model;
+  final List<PhotoItem> items;
+
+  /// Things the AI saw but could not name.
+  final List<String> unrecognized;
 }
 
 class ExerciseLog {

@@ -45,3 +45,7 @@ Thumbs.db
 # Rahasia (jangan pernah di-commit)
 .env
 *.env
+
+# Dokumen kerja AI (rancangan, mockup, rencana): simpan lokal, jangan masuk repo
+docs/superpowers/
+.superpowers/

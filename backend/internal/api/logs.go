@@ -1,7 +1,9 @@
 package api
 
 import (
+	"errors"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +20,7 @@ type MealLog struct {
 	Name         string    `db:"name" json:"name"`
 	Category     string    `db:"category" json:"category"` // Package 1 category, "packaged" or "custom"
 	Servings     float64   `db:"servings" json:"servings"`
+	Grams        *float64  `db:"grams" json:"grams"` // set for Scan Meal photo items
 	CaloriesKcal float64   `db:"calories_kcal" json:"calories_kcal"`
 	ProteinG     float64   `db:"protein_g" json:"protein_g"`
 	CarbsG       float64   `db:"carbs_g" json:"carbs_g"`
@@ -51,7 +54,7 @@ const mealSelect = `
 	SELECT m.id, to_char(m.logged_on, 'YYYY-MM-DD') AS logged_on, m.meal_time, m.food_id, m.barcode,
 	       COALESCE(m.custom_name, f.name, p.brand || ' ' || p.product_name) AS name,
 	       COALESCE(f.category, CASE WHEN m.barcode IS NOT NULL THEN 'packaged' ELSE 'custom' END) AS category,
-	       m.servings, m.calories_kcal, m.protein_g, m.carbs_g, m.fat_g, m.fiber_g, m.sugar_g, m.sodium_mg,
+	       m.servings, m.grams, m.calories_kcal, m.protein_g, m.carbs_g, m.fat_g, m.fiber_g, m.sugar_g, m.sodium_mg,
 	       m.created_at, COALESCE(f.serving_grams, p.serving_size, 0)::float8 AS serving_grams,
 	       COALESCE(f.category = 'drink', p.serving_unit = 'ml', false) AS is_drink
 	FROM m
@@ -174,6 +177,138 @@ func (s *Server) createMeal(w http.ResponseWriter, r *http.Request, userID int64
 	items := []MealLog{item}
 	if s.addMealLabels(w, r, items) {
 		writeJSON(w, http.StatusCreated, items[0])
+	}
+}
+
+type batchItem struct {
+	FoodID *string     `json:"food_id"`
+	Custom *customFood `json:"custom"` // nutrients for the whole weight, not per serving
+	Grams  float64     `json:"grams"`
+}
+
+type batchInput struct {
+	Date     string      `json:"date"`
+	MealTime string      `json:"meal_time"`
+	Items    []batchItem `json:"items"`
+}
+
+// validateBatch checks a reviewed Scan Meal photo before anything is saved. The error text is the client message.
+func validateBatch(in batchInput) error {
+	switch in.MealTime {
+	case "breakfast", "lunch", "dinner", "snack":
+	default:
+		return errors.New("meal_time must be breakfast, lunch, dinner or snack")
+	}
+	if len(in.Items) == 0 || len(in.Items) > 30 {
+		return errors.New("items must have 1 to 30 entries")
+	}
+	for _, it := range in.Items {
+		if (it.FoodID == nil) == (it.Custom == nil) {
+			return errors.New("each item needs exactly one of food_id or custom")
+		}
+		if it.Grams <= 0 || it.Grams > maxPhotoGrams {
+			return errors.New("grams must be above 0 and at most 2000")
+		}
+		if c := it.Custom; c != nil {
+			values := []float64{c.CaloriesKcal, c.ProteinG, c.CarbsG, c.FatG}
+			for _, p := range []*float64{c.FiberG, c.SugarG, c.SodiumMg} {
+				if p != nil {
+					values = append(values, *p)
+				}
+			}
+			if strings.TrimSpace(c.Name) == "" || slices.ContainsFunc(values, func(v float64) bool { return v < 0 }) {
+				return errors.New("custom needs a name and non-negative nutrients")
+			}
+			// Keeps values inside the numeric(6,1) columns; 9999 is far above any real meal item.
+			if slices.ContainsFunc(values, func(v float64) bool { return v > 9999 }) {
+				return errors.New("custom nutrients are too large")
+			}
+		}
+	}
+	return nil
+}
+
+// createMealsBatch: POST /api/v1/me/meals/batch saves a reviewed Scan Meal photo: all items or none.
+// A food_id item gets the database nutrients for its grams; a custom item keeps the given nutrients.
+func (s *Server) createMealsBatch(w http.ResponseWriter, r *http.Request, userID int64) {
+	var in batchInput
+	if !decode(w, r, &in) {
+		return
+	}
+	day, err := parseDate(in.Date)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "date must be YYYY-MM-DD")
+		return
+	}
+	if err := validateBatch(in); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	ctx := r.Context()
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	defer tx.Rollback(ctx) // no-op after Commit
+
+	ids := make([]int64, 0, len(in.Items))
+	for _, it := range in.Items {
+		var id int64
+		if it.FoodID != nil {
+			var serving float64
+			err := tx.QueryRow(ctx, `SELECT serving_grams::float8 FROM foods WHERE id = $1`, *it.FoodID).Scan(&serving)
+			if isNoRows(err) {
+				writeError(w, http.StatusNotFound, "food not found")
+				return
+			}
+			if err != nil {
+				serverError(w, err)
+				return
+			}
+			if it.Grams/serving > 20 {
+				writeError(w, http.StatusBadRequest, "grams is too large for this food")
+				return
+			}
+			err = tx.QueryRow(ctx, `
+				INSERT INTO meal_logs (user_id, logged_on, meal_time, food_id, servings, grams, calories_kcal, protein_g,
+				                       carbs_g, fat_g, fiber_g, sugar_g, sodium_mg)
+				SELECT $1, $2, $3, id, GREATEST(round($4::numeric / serving_grams, 2), 0.01), $4::numeric,
+				       calories_kcal * $4::numeric / serving_grams, protein_g * $4::numeric / serving_grams,
+				       carbs_g * $4::numeric / serving_grams, fat_g * $4::numeric / serving_grams,
+				       fiber_g * $4::numeric / serving_grams, sugar_g * $4::numeric / serving_grams,
+				       sodium_mg * $4::numeric / serving_grams
+				FROM foods WHERE id = $5
+				RETURNING id`, userID, day, in.MealTime, it.Grams, *it.FoodID).Scan(&id)
+		} else {
+			c := it.Custom
+			err = tx.QueryRow(ctx, `
+				INSERT INTO meal_logs (user_id, logged_on, meal_time, custom_name, servings, grams, calories_kcal,
+				                       protein_g, carbs_g, fat_g, fiber_g, sugar_g, sodium_mg)
+				VALUES ($1, $2, $3, $4, 1, $5, $6, $7, $8, $9, $10, $11, $12)
+				RETURNING id`, userID, day, in.MealTime, strings.TrimSpace(c.Name), it.Grams, c.CaloriesKcal,
+				c.ProteinG, c.CarbsG, c.FatG, c.FiberG, c.SugarG, c.SodiumMg).Scan(&id)
+		}
+		if err != nil {
+			serverError(w, err)
+			return
+		}
+		ids = append(ids, id)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		serverError(w, err)
+		return
+	}
+
+	items, err := queryAll[MealLog](ctx, s.db, `WITH m AS (SELECT * FROM meal_logs WHERE id = ANY($1))`+mealSelect+`
+		ORDER BY array_position($1, m.id)`, ids)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	if s.addMealLabels(w, r, items) {
+		writeJSON(w, http.StatusCreated, map[string]any{"items": items})
 	}
 }
 

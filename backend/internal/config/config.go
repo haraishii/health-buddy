@@ -25,6 +25,10 @@ type Config struct {
 	OllamaAPIKey  string // from ollama.com/settings/keys; never put it in the app
 	OllamaModel   string
 	OllamaTimeout time.Duration // past this the coach answers from its rules instead
+
+	// Scan Meal photos: a vision model on the same Ollama account. gemma4:31b is the one in the free plan.
+	OllamaVisionModel   string
+	OllamaVisionTimeout time.Duration
 }
 
 func Load() (Config, error) {
@@ -56,6 +60,11 @@ func Load() (Config, error) {
 	// The app gives up after 20 s, so the model must answer well before that.
 	if c.OllamaTimeout, err = time.ParseDuration(getenv("OLLAMA_TIMEOUT", "12s")); err != nil || c.OllamaTimeout <= 0 {
 		return c, errors.New("OLLAMA_TIMEOUT must be a duration such as 12s")
+	}
+	c.OllamaVisionModel = getenv("OLLAMA_VISION_MODEL", "gemma4:31b")
+	if c.OllamaVisionTimeout, err = time.ParseDuration(getenv("OLLAMA_VISION_TIMEOUT", "30s")); err != nil ||
+		c.OllamaVisionTimeout <= 0 {
+		return c, errors.New("OLLAMA_VISION_TIMEOUT must be a duration such as 30s")
 	}
 	return c, nil
 }

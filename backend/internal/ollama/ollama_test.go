@@ -3,6 +3,7 @@ package ollama
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -79,6 +80,56 @@ func TestChatErrors(t *testing.T) {
 				t.Fatalf("err = %v, want it to contain %q", err, c.want)
 			}
 		})
+	}
+}
+
+func TestChatWithSendsImagesAndThinkFalse(t *testing.T) {
+	var body map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Error(err)
+		}
+		w.Write([]byte(`{"message":{"role":"assistant","content":"ok"}}`))
+	}))
+	defer srv.Close()
+
+	_, err := New(srv.URL, "k", "gemma4:31b").ChatWith(context.Background(), Request{
+		Messages:    []Message{{Role: "user", Content: "what food?", Images: []string{"aGk="}}},
+		Think:       false,
+		Temperature: 0.2,
+		NumPredict:  2048,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if think, ok := body["think"]; !ok || think != false {
+		t.Errorf("think = %v (present %v), want false", think, ok)
+	}
+	opts, _ := body["options"].(map[string]any)
+	if opts["temperature"] != 0.2 || opts["num_predict"] != float64(2048) {
+		t.Errorf("options = %v", opts)
+	}
+	msgs, _ := body["messages"].([]any)
+	first, _ := msgs[0].(map[string]any)
+	if imgs, _ := first["images"].([]any); len(imgs) != 1 || imgs[0] != "aGk=" {
+		t.Errorf("images = %v", first["images"])
+	}
+}
+
+func TestChatWithStatusError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusPaymentRequired)
+		w.Write([]byte(`{"error":"not included in your free usage"}`))
+	}))
+	defer srv.Close()
+
+	_, err := New(srv.URL, "k", "gemma4:31b").ChatWith(context.Background(), Request{})
+	var se *StatusError
+	if !errors.As(err, &se) || se.StatusCode != http.StatusPaymentRequired {
+		t.Fatalf("err = %v, want a *StatusError with 402", err)
+	}
+	if !strings.Contains(err.Error(), "402 Payment Required: not included in your free usage") {
+		t.Fatalf("err = %q", err)
 	}
 }
 

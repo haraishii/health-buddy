@@ -31,3 +31,6 @@ services:
         sync: false
       - key: OLLAMA_MODEL
         value: gpt-oss:120b
+      # Scan Meal photos; the only vision model in Ollama's free plan.
+      - key: OLLAMA_VISION_MODEL
+        value: gemma4:31b
